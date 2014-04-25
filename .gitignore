@@ -1,0 +1,5 @@
+# customary build folder
+build/
+
+# backup files
+*~
