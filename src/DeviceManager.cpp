@@ -19,16 +19,55 @@
  */
 
 #include "oclcrypto/DeviceManager.h"
+#include "oclcrypto/CLError.h"
+#include "oclcrypto/Device.h"
+
+#include <vector>
 
 namespace oclcrypto
 {
 
-DeviceManager::DeviceManager()
-{}
+void DeviceManager::initialize(bool useCPUs)
+{
+    if (msDevices.size() > 0)
+    {
+        // Already initialized, TODO: Warning?
+        return;
+    }
 
-DeviceManager::~DeviceManager()
-{}
+    cl_uint platformCount = 0;
+    CLErrorGuard(clGetPlatformIDs(0, nullptr, &platformCount));
 
+    typedef std::vector<cl_platform_id> CLPlatformVector;
+    CLPlatformVector platforms(platformCount);
+    CLErrorGuard(clGetPlatformIDs(platformCount, platforms.data(), NULL));
+
+    for (CLPlatformVector::const_iterator it = platforms.begin();
+         it != platforms.end(); ++it)
+    {
+        initializePlatform(*it, useCPUs);
+    }
 }
 
-#endif
+void DeviceManager::initializePlatform(cl_platform_id platform, bool useCPUs)
+{
+    cl_device_type deviceType = useCPUs ?
+        CL_DEVICE_TYPE_ALL : CL_DEVICE_TYPE_ALL & ~CL_DEVICE_TYPE_CPU;
+
+    cl_uint deviceCount = 0;
+    CLErrorGuard(clGetDeviceIDs(platform, deviceType, 0, nullptr, &deviceCount));
+
+    typedef std::vector<cl_device_id> CLDeviceVector;
+    CLDeviceVector devices(deviceCount);
+
+    CLErrorGuard(clGetDeviceIDs(platform, deviceType, deviceCount, devices.data(), &deviceCount));
+
+    for (CLDeviceVector::const_iterator it = devices.begin();
+         it != devices.end(); ++it)
+    {
+        Device* device = new Device(platform, *it);
+        msDevices.insert(std::make_pair(device->getCapacity(), device));
+    }
+}
+
+}

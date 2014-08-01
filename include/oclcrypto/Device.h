@@ -18,20 +18,31 @@
  *
  */
 
-#ifndef OCLCRYPTO_FORWARD_DECLS_H_
-#define OCLCRYPTO_FORWARD_DECLS_H_
+#ifndef OCLCRYPTO_DEVICE_H_
+#define OCLCRYPTO_DEVICE_H_
 
-#include "oclcrypto/Config.h"
-#include <memory>
+#include "oclcrypto/ForwardDecls.h"
 
 namespace oclcrypto
 {
 
-class Device;
-class DeviceAllocation;
-class DeviceManager;
+/**
+ * @brief Manages OpenCL devices found on the machine and their load
+ */
+class Device
+{
+    public:
+        Device(cl_platform_id platformID, cl_device_id deviceID);
+        ~Device();
 
-typedef std::shared_ptr<DeviceAllocation*> DeviceAllocationPtr;
+        unsigned int getCapacity() const;
+
+    private:
+        cl_platform_id mPlatformID;
+        cl_device_id mDeviceID;
+        cl_context mContext;
+        cl_command_queue mQueue;
+};
 
 }
 

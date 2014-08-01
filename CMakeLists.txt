@@ -7,8 +7,13 @@ set(LIBOCLCRYPTO_VERSION_PATCH "1")
 set(LIBOCLCRYPTO_VERSION "${LIBOCLCRYPTO_VERSION_MAJOR}.${LIBOCLCRYPTO_VERSION_MINOR}.${LIBOCLCRYPTO_VERSION_PATCH}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+    add_definitions(-std=c++11)
+endif()
+
 include(GNUInstallDirs)
 
+find_package(OpenCL REQUIRED)
 # This is optional, only required if user wants to run cppcheck (unlikely)
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
 

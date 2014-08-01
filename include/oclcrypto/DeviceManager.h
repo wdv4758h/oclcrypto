@@ -22,6 +22,8 @@
 #define OCLCRYPTO_DEVICE_MANAGER_H_
 
 #include "oclcrypto/ForwardDecls.h"
+
+#include <CL/cl.h>
 #include <map>
 
 namespace oclcrypto
@@ -66,7 +68,9 @@ class DeviceManager
         static void _notifyDeallocation(Device* device, unsigned int workload);
 
     private:
-        static std::multimap<int, Device*> mDevices;
+        static void initializePlatform(cl_platform_id platform, bool useCPUs);
+
+        static std::multimap<int, Device*> msDevices;
 };
 
 }
