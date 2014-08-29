@@ -15,10 +15,9 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
  */
 
-#include "oclcrypto/DeviceManager.h"
+#include "oclcrypto/System.h"
 #include "oclcrypto/CLError.h"
 #include "oclcrypto/Device.h"
 
@@ -27,14 +26,8 @@
 namespace oclcrypto
 {
 
-void DeviceManager::initialize(bool useCPUs)
+System::System(bool useCPUs)
 {
-    if (msDevices.size() > 0)
-    {
-        // Already initialized, TODO: Warning?
-        return;
-    }
-
     cl_uint platformCount = 0;
     CLErrorGuard(clGetPlatformIDs(0, nullptr, &platformCount));
 
@@ -49,7 +42,10 @@ void DeviceManager::initialize(bool useCPUs)
     }
 }
 
-void DeviceManager::initializePlatform(cl_platform_id platform, bool useCPUs)
+System::~System()
+{}
+
+void System::initializePlatform(cl_platform_id platform, bool useCPUs)
 {
     cl_device_type deviceType = useCPUs ?
         CL_DEVICE_TYPE_ALL : CL_DEVICE_TYPE_ALL & ~CL_DEVICE_TYPE_CPU;
@@ -66,7 +62,7 @@ void DeviceManager::initializePlatform(cl_platform_id platform, bool useCPUs)
          it != devices.end(); ++it)
     {
         Device* device = new Device(platform, *it);
-        msDevices.insert(std::make_pair(device->getCapacity(), device));
+        mDevices.insert(std::make_pair(device->getCapacity(), device));
     }
 }
 

@@ -18,11 +18,12 @@
  *
  */
 
-#ifndef OCLCRYPTO_DEVICE_MANAGER_H_
-#define OCLCRYPTO_DEVICE_MANAGER_H_
+#ifndef OCLCRYPTO_SYSTEM_H_
+#define OCLCRYPTO_SYSTEM_H_
 
 #include "oclcrypto/ForwardDecls.h"
 
+// TODO: Hide CL dependency
 #include <CL/cl.h>
 #include <map>
 
@@ -44,7 +45,7 @@ namespace oclcrypto
  * This class is more of a namespace for functions than a real class.
  * It is a singleton in that sense.
  */
-class DeviceManager
+class System
 {
     public:
         /**
@@ -52,25 +53,25 @@ class DeviceManager
          *
          * @param useCPUs Should CPU OpenCL devices also be used by oclcrypto
          */
-        static void initialize(bool useCPUs = false);
+        System(bool useCPUs = false);
 
         /**
          * @brief Frees resources allocated as part of initialization
          */
-        static void finalize();
+        ~System();
 
         static DeviceAllocationPtr allocateDevice(unsigned int workload = 1);
 
     protected:
         friend class DeviceAllocation;
 
-        static void _notifyAllocation(Device* device, unsigned int workload);
-        static void _notifyDeallocation(Device* device, unsigned int workload);
+        void _notifyAllocation(Device* device, unsigned int workload);
+        void _notifyDeallocation(Device* device, unsigned int workload);
 
     private:
-        static void initializePlatform(cl_platform_id platform, bool useCPUs);
+        void initializePlatform(cl_platform_id platform, bool useCPUs);
 
-        static std::multimap<int, Device*> msDevices;
+        std::multimap<int, Device*> mDevices;
 };
 
 }

@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
  */
 
 #include "oclcrypto/CLError.h"
@@ -131,6 +130,7 @@ const char* CLError::clErrorToString(cl_int error)
         case CL_INVALID_GLOBAL_WORK_SIZE:
             return "CL_INVALID_GLOBAL_WORK_SIZE";
 #endif
+
         default:
             return "Unknown error";
     }

@@ -22,12 +22,13 @@
 #define OCLCRYPTO_DEVICE_H_
 
 #include "oclcrypto/ForwardDecls.h"
+#include <CL/cl.h>
 
 namespace oclcrypto
 {
 
 /**
- * @brief Manages OpenCL devices found on the machine and their load
+ * @brief Represents one OpenCL device with a distinct cl_device_id
  */
 class Device
 {

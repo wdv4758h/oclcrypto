@@ -15,31 +15,36 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
  */
 
-#ifndef OCLCRYPTO_FORWARD_DECLS_H_
-#define OCLCRYPTO_FORWARD_DECLS_H_
+#include <oclcrypto/System.h>
 
-#include "oclcrypto/Config.h"
+#include <boost/test/unit_test.hpp>
+#include "TestSuiteFixture.h"
 
-#include <vector>
-#include <memory>
-
-namespace oclcrypto
+/*
+void test()
 {
+    const oclcrypto::Buffer input("plainplainplain");
+    const oclcrypto::Buffer secret("secret");
 
-class Device;
-class DeviceAllocation;
-class DeviceManager;
-class Task;
+    oclcrypto::Buffer output;
+    BOOST_REQUIRE_EQUAL(output.size(), 0);
 
-typedef std::vector<char> Buffer;
+    oclcrypto::Task task(oclcrypto::PASSTHROUGH, input, secret, output);
+    BOOST_REQUIRE_EQUAL(task.status, TS_SPECIFIED);
 
-typedef std::shared_ptr<DeviceAllocation*> DeviceAllocationPtr;
-typedef std::shared_ptr<Buffer> BufferPtr;
-typedef std::shared_ptr<const Buffer> ConstBufferPtr;
+    // useCPUs = true
+    oclcrypto::System system(true);
+    std::future<bool> scheduledTask = system.schedule(spec);
 
+    // task status is std::atomic
+    while (task.status == TS_SPECIFIED)
+    {}
+
+    BOOST_REQUIRE_EQUAL(task.status, TS_RUNNING);
+
+    scheduleTask.wait();
+    BOOST_REQUIRE_EQUAL(task.status, TS_FINISHED);
 }
-
-#endif
+*/

@@ -15,30 +15,54 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
  */
 
-#ifndef OCLCRYPTO_FORWARD_DECLS_H_
-#define OCLCRYPTO_FORWARD_DECLS_H_
+#ifndef OCLCRYPTO_TASK_H_
+#define OCLCRYPTO_TASK_H_
 
-#include "oclcrypto/Config.h"
+#include "oclcrypto/ForwardDecls.h"
 
-#include <vector>
 #include <memory>
 
 namespace oclcrypto
 {
 
-class Device;
-class DeviceAllocation;
-class DeviceManager;
-class Task;
+enum TaskAlgorithm
+{
+    TA_PASSTHROUGH = 1
+}
 
-typedef std::vector<char> Buffer;
+enum TaskState
+{
+    TS_SPECIFIED = 1,
+    TS_RUNNING = 2,
+    TS_ERROR = 3,
+    TS_FINISHED = 4
+}
 
-typedef std::shared_ptr<DeviceAllocation*> DeviceAllocationPtr;
-typedef std::shared_ptr<Buffer> BufferPtr;
-typedef std::shared_ptr<const Buffer> ConstBufferPtr;
+/**
+ * @brief
+ */
+class Task
+{
+    public:
+        inline Task(Algorithm algorithm, ConstBufferPtr input, ConstBufferPtr secret, BufferPtr output):
+            algorithm(algorithm),
+            state(TS_SPECIFIED),
+
+            input(input),
+            secret(secret),
+            output(output)
+        {}
+
+        const TaskAlgorithm algorithm;
+        std::atomic<TaskState> state;
+
+        const ConstBufferPtr input;
+        const ConstBufferPtr secret;
+        /// @note This can only be valid if task.state equals TS_FINISHED
+        const BufferPtr output;
+};
 
 }
 

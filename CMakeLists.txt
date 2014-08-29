@@ -14,6 +14,8 @@ endif()
 include(GNUInstallDirs)
 
 find_package(OpenCL REQUIRED)
+find_package(Boost 1.36.0 COMPONENTS unit_test_framework)
+
 # This is optional, only required if user wants to run cppcheck (unlikely)
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
 
@@ -21,9 +23,16 @@ file(GLOB LIBOCLCRYPTO_HEADERS "${CMAKE_SOURCE_DIR}/include/oclcrypto/*.h")
 file(GLOB LIBOCLCRYPTO_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 set(LIBOCLCRYPTO_INCLUDE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR})
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}
 
-set(LIBOCLCRYPTO_LINK_LIBRARIES)
+    ${BOOST_INCLUDE_DIR}
+    ${OPENCL_INCLUDE_DIRS}
+)
+
+set(LIBOCLCRYPTO_LINK_LIBRARIES
+    ${OPENCL_LIBRARIES}
+)
 
 configure_file("include/oclcrypto/Config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/oclcrypto/Config.h")
 
@@ -40,6 +49,9 @@ install(TARGETS "oclcrypto"
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/liboclcrypto"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+enable_testing()
+add_subdirectory(tests)
 
 if (CPPCHECK_EXECUTABLE)
     set(CPPCHECK_INCL_PARAMS -I /usr/include)

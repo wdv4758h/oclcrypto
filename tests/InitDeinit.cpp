@@ -15,31 +15,22 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
  */
 
-#ifndef OCLCRYPTO_FORWARD_DECLS_H_
-#define OCLCRYPTO_FORWARD_DECLS_H_
+#include <oclcrypto/System.h>
+#include <boost/test/unit_test.hpp>
+#include "TestSuiteFixture.h"
 
-#include "oclcrypto/Config.h"
+BOOST_AUTO_TEST_SUITE(InitDeinit)
 
-#include <vector>
-#include <memory>
-
-namespace oclcrypto
+BOOST_AUTO_TEST_CASE(InitWithCPUs)
 {
-
-class Device;
-class DeviceAllocation;
-class DeviceManager;
-class Task;
-
-typedef std::vector<char> Buffer;
-
-typedef std::shared_ptr<DeviceAllocation*> DeviceAllocationPtr;
-typedef std::shared_ptr<Buffer> BufferPtr;
-typedef std::shared_ptr<const Buffer> ConstBufferPtr;
-
+    oclcrypto::System system;
 }
 
-#endif
+BOOST_AUTO_TEST_CASE(InitWithoutCPUs)
+{
+    oclcrypto::System system(false);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

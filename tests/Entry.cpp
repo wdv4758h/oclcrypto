@@ -15,31 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
  */
 
-#ifndef OCLCRYPTO_FORWARD_DECLS_H_
-#define OCLCRYPTO_FORWARD_DECLS_H_
-
-#include "oclcrypto/Config.h"
-
-#include <vector>
-#include <memory>
-
-namespace oclcrypto
-{
-
-class Device;
-class DeviceAllocation;
-class DeviceManager;
-class Task;
-
-typedef std::vector<char> Buffer;
-
-typedef std::shared_ptr<DeviceAllocation*> DeviceAllocationPtr;
-typedef std::shared_ptr<Buffer> BufferPtr;
-typedef std::shared_ptr<const Buffer> ConstBufferPtr;
-
-}
-
-#endif
+#define BOOST_TEST_MODULE oclcrypto-tests
+#include <boost/test/unit_test.hpp>
