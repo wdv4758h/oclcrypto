@@ -37,6 +37,13 @@ struct RawOpenCLFixture
     oclcrypto::System system;
 };
 
+const char* translate_opencl =
+    "__kernel void translate(__global float* values, __global float* deltas)\n"
+    "{\n"
+    "    int gid = get_global_id(0);\n"
+    "    values[gid] += deltas[gid];\n"
+    "}\n";
+
 BOOST_FIXTURE_TEST_SUITE(RawOpenCL, RawOpenCLFixture)
 
 BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
@@ -45,7 +52,7 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
 
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
-        oclcrypto::Device& device = system.getDevice(0);
+        oclcrypto::Device& device = system.getDevice(i);
 
         {
             // invalid syntax has to throw exception
@@ -57,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
             oclcrypto::Program& empty = device.createProgram("");
 
             BOOST_CHECK_EQUAL(empty.getKernelCount(), 0);
-            BOOST_CHECK_THROW(empty.getKernel("nonexistant"), oclcrypto::CLError);
+            BOOST_CHECK_THROW(empty.createKernel("nonexistant"), oclcrypto::CLError);
             BOOST_CHECK_EQUAL(empty.getKernelCount(), 0);
 
             device.destroyProgram(empty);
@@ -68,28 +75,51 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
 
         {
             // minimum one kernel program
-            oclcrypto::Program& simple = device.createProgram(
-                "__kernel void translate(__global float2* positions, __global float2* deltas)\n"
-                "{\n"
-                "    int gid = get_global_id(0);\n"
-                "    positions[gid] += deltas[gid];\n"
-                "}\n"
-            );
+            oclcrypto::Program& simple = device.createProgram(translate_opencl);
 
             // nothing requested yet, so the expected kernel count is 0
             BOOST_CHECK_EQUAL(simple.getKernelCount(), 0);
-            BOOST_CHECK_THROW(simple.getKernel("nonexistant"), oclcrypto::CLError);
+            BOOST_CHECK_THROW(simple.createKernel("nonexistant"), oclcrypto::CLError);
+            // kernel count still zero after error
+            BOOST_CHECK_EQUAL(simple.getKernelCount(), 0);
 
-            simple.getKernel("translate");
-            // translate was requested, the kernel count should be 1 now
+            oclcrypto::Kernel& kernel = simple.createKernel("translate");
+            // translate was created, the kernel count should be 1 now
             BOOST_CHECK_EQUAL(simple.getKernelCount(), 1);
 
-            // this should not create a new kernel, just fetch the existing one
-            // so kernel count should stay at 1
-            oclcrypto::Kernel& kernel = simple.getKernel("translate");
-            BOOST_CHECK_EQUAL(simple.getKernelCount(), 1);
+            {
+                // another kernel of the same function
+                oclcrypto::Kernel& kernel2 = simple.createKernel("translate");
+                BOOST_CHECK_EQUAL(simple.getKernelCount(), 2);
+                simple.destroyKernel(kernel2);
+                BOOST_CHECK_EQUAL(simple.getKernelCount(), 1);
+            }
+
+            simple.destroyKernel(kernel);
+            // destroying twice should throw
+            BOOST_CHECK_THROW(simple.destroyKernel(kernel), std::invalid_argument);
         }
     }
 }
+/*
+BOOST_AUTO_TEST_CASE(KernelArguments)
+{
+    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
+
+    for (size_t i = 0; i < system.getDeviceCount(); ++i)
+    {
+        oclcrypto::Device& device = system.getDevice(0);
+        oclcrypto::Program& program = device.createProgram(translate_opencl);
+
+        oclcrypto::DataBuffer& values = device.allocateBuffer(64);
+        oclcrypto::DataBuffer& deltas = device.allocateBuffer(64);
+
+        oclcrypto::Kernel& kernel = program.createKernel("translate");
+        kernel.setParameter(0, values);
+        kernel.setParameter(1, deltas);
+        kernel.execute();
+    }
+}
+*/
 
 BOOST_AUTO_TEST_SUITE_END()

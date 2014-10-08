@@ -28,6 +28,8 @@
 #include "oclcrypto/Device.h"
 #include "oclcrypto/Kernel.h"
 
+#include <algorithm>
+
 namespace oclcrypto
 {
 
@@ -68,10 +70,10 @@ Program::Program(Device& device, const std::string& source):
 
 Program::~Program()
 {
-    for (KernelMap::const_iterator it = mKernels.begin();
+    for (KernelVector::const_iterator it = mKernels.begin();
          it != mKernels.end(); ++it)
     {
-        delete it->second;
+        delete *it;
     }
 
     mKernels.clear();
@@ -89,18 +91,22 @@ const std::string& Program::getSource() const
     return mSource;
 }
 
-Kernel& Program::getKernel(const std::string& name)
+Kernel& Program::createKernel(const std::string& name)
 {
-    KernelMap::const_iterator it = mKernels.find(name);
+    Kernel* ret = new Kernel(*this, name);
+    mKernels.push_back(ret);
+    return *ret;
+}
+
+void Program::destroyKernel(Kernel& kernel)
+{
+    KernelVector::iterator it = std::find(mKernels.begin(), mKernels.end(), &kernel);
 
     if (it == mKernels.end())
-    {
-        Kernel* ret = new Kernel(*this, name);
-        mKernels.insert(std::make_pair(name, ret));
-        return *ret;
-    }
+        throw std::invalid_argument("Given kernel has already been destroyed or doesn't belong in this Program.");
 
-    return *(it->second);
+    mKernels.erase(it);
+    delete &kernel;
 }
 
 size_t Program::getKernelCount() const

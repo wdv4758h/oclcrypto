@@ -68,22 +68,29 @@ class Program
         const std::string& getSource() const;
 
         /**
-         * @brief Retrieves a kernel of given name from the program
+         * @brief Creates a kernel of a function from the program of given name
          *
          * @param name Name of the symbol from the source decorated with the __kernel qualifier
          * @note
-         * This creates oclcrypto::Kernel instances on demand, all instances
-         * are owned by the Program! You may not deallocate them yourself.
+         * Kernels also contain parameters used for execution so it makes
+         * to create multiple kernels of the same function name.
          */
-        Kernel& getKernel(const std::string& name);
+        Kernel& createKernel(const std::string& name);
+
+        /**
+         * @brief Destroys given Kernel
+         */
+        void destroyKernel(Kernel& kernel);
 
         /**
          * @brief Returns the number of created kernels in this program
          *
          * @note
-         * This returns the number of unique kernel names that were requested
-         * and successfully created. There may be more kernels in the source
-         * code!
+         * This returns the number of Kernel instances that were successfully
+         * created. There may be more kernel entry functions in the program
+         * source code. There can also be more Kernel instances than kernel
+         * entry functions - in case some kernel entry function is instantiated
+         * multiple times.
          */
         size_t getKernelCount() const;
 
@@ -99,8 +106,8 @@ class Program
 
         cl_program mCLProgram;
 
-        typedef std::map<std::string, Kernel*> KernelMap;
-        KernelMap mKernels;
+        typedef std::vector<Kernel*> KernelVector;
+        KernelVector mKernels;
 };
 
 }

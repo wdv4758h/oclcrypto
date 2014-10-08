@@ -36,7 +36,7 @@ namespace oclcrypto
 enum TaskAlgorithm
 {
     TA_PASSTHROUGH = 1
-}
+};
 
 enum TaskState
 {
@@ -44,7 +44,7 @@ enum TaskState
     TS_RUNNING = 2,
     TS_ERROR = 3,
     TS_FINISHED = 4
-}
+};
 
 /**
  * @brief

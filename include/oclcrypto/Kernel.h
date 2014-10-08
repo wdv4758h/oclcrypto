@@ -34,6 +34,10 @@ namespace oclcrypto
 
 /**
  * @brief Represents a kernel from one OpenCL program
+ *
+ * A kernel is a function inside program source code and a set of parameters
+ * used to run it. Since parameters are also paired with the kernel it does
+ * make sense to create multiple kernels of the same function.
  */
 class Kernel
 {
