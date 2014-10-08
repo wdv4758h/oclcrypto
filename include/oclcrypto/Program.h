@@ -29,6 +29,8 @@
 #include "oclcrypto/ForwardDecls.h"
 #include <CL/cl.h>
 
+#include <map>
+
 namespace oclcrypto
 {
 
@@ -65,6 +67,28 @@ class Program
          */
         const std::string& getSource() const;
 
+        /**
+         * @brief Retrieves a kernel of given name from the program
+         *
+         * @param name Name of the symbol from the source decorated with the __kernel qualifier
+         * @note
+         * This creates oclcrypto::Kernel instances on demand, all instances
+         * are owned by the Program! You may not deallocate them yourself.
+         */
+        Kernel& getKernel(const std::string& name);
+
+        /**
+         * @brief Returns the number of created kernels in this program
+         *
+         * @note
+         * This returns the number of unique kernel names that were requested
+         * and successfully created. There may be more kernels in the source
+         * code!
+         */
+        size_t getKernelCount() const;
+
+        cl_program getCLProgram() const;
+
         // noncopyable
         Program(const Program&) = delete;
         Program& operator=(const Program&) = delete;
@@ -73,7 +97,10 @@ class Program
         Device& mDevice;
         const std::string mSource;
 
-        cl_program mProgram;
+        cl_program mCLProgram;
+
+        typedef std::map<std::string, Kernel*> KernelMap;
+        KernelMap mKernels;
 };
 
 }

@@ -33,19 +33,21 @@ namespace oclcrypto
 {
 
 Device::Device(cl_platform_id platformID, cl_device_id deviceID):
-    mPlatformID(platformID),
-    mDeviceID(deviceID)
+    mCLPlatformID(platformID),
+    mCLDeviceID(deviceID)
 {
     cl_context_properties contextProperties[] = {
-        CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(mPlatformID),
+        CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(mCLPlatformID),
         0
     };
 
     cl_int err;
 
-    mContext = clCreateContext(contextProperties, 1, &mDeviceID, nullptr, nullptr, &err); CLErrorGuard(err);
+    mCLContext = clCreateContext(contextProperties, 1, &mCLDeviceID, nullptr, nullptr, &err);
+    CLErrorGuard(err);
     // TODO: command_queue_properties might be useful for profiling
-    mQueue = clCreateCommandQueue(mContext, mDeviceID, 0, &err); CLErrorGuard(err);
+    mCLQueue = clCreateCommandQueue(mCLContext, mCLDeviceID, 0, &err);
+    CLErrorGuard(err);
 }
 
 Device::~Device()
@@ -60,8 +62,8 @@ Device::~Device()
 
     try
     {
-        CLErrorGuard(clReleaseCommandQueue(mQueue));
-        CLErrorGuard(clReleaseContext(mContext));
+        CLErrorGuard(clReleaseCommandQueue(mCLQueue));
+        CLErrorGuard(clReleaseContext(mCLContext));
     }
     catch (...) // can't throw in dtor
     {
@@ -90,14 +92,14 @@ void Device::destroyProgram(Program& program)
     delete &program;
 }
 
-cl_device_id Device::getDeviceID() const
+cl_device_id Device::getCLDeviceID() const
 {
-    return mDeviceID;
+    return mCLDeviceID;
 }
 
-cl_context Device::getContext() const
+cl_context Device::getCLContext() const
 {
-    return mContext;
+    return mCLContext;
 }
 
 unsigned int Device::getCapacity() const

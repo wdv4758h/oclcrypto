@@ -23,27 +23,39 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OCLCRYPTO_FORWARD_DECLS_H_
-#define OCLCRYPTO_FORWARD_DECLS_H_
+#ifndef OCLCRYPTO_KERNEL_H_
+#define OCLCRYPTO_KERNEL_H_
 
-#include "oclcrypto/Config.h"
-
-#include <vector>
-#include <memory>
+#include "oclcrypto/ForwardDecls.h"
+#include <CL/cl.h>
 
 namespace oclcrypto
 {
 
-class Device;
-class Kernel;
-class Program;
-class System;
-class Task;
+/**
+ * @brief Represents a kernel from one OpenCL program
+ */
+class Kernel
+{
+    public:
+        Kernel(Program& program, const std::string& name);
 
-typedef std::vector<char> Buffer;
+        ~Kernel();
 
-typedef std::shared_ptr<Buffer> BufferPtr;
-typedef std::shared_ptr<const Buffer> ConstBufferPtr;
+        Program& getProgram() const;
+
+        const std::string& getName() const;
+
+        // noncopyable
+        Kernel(const Kernel&) = delete;
+        Kernel& operator=(const Kernel&) = delete;
+
+    private:
+        Program& mProgram;
+        const std::string mName;
+
+        cl_kernel mKernel;
+};
 
 }
 

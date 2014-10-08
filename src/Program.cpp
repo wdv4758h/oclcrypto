@@ -26,6 +26,7 @@
 #include "oclcrypto/Program.h"
 #include "oclcrypto/CLError.h"
 #include "oclcrypto/Device.h"
+#include "oclcrypto/Kernel.h"
 
 namespace oclcrypto
 {
@@ -39,8 +40,8 @@ Program::Program(Device& device, const std::string& source):
         const size_t length = source.length();
 
         cl_int err;
-        mProgram = clCreateProgramWithSource(
-            device.getContext(), 1,
+        mCLProgram = clCreateProgramWithSource(
+            device.getCLContext(), 1,
             (const char** const)&src, &length,
             &err
         );
@@ -48,15 +49,15 @@ Program::Program(Device& device, const std::string& source):
         CLErrorGuard(err);
     }
 
-    const cl_device_id deviceId = device.getDeviceID();
-    const cl_int err = clBuildProgram(mProgram, 1, &deviceId, nullptr, nullptr, nullptr);
+    const cl_device_id deviceId = device.getCLDeviceID();
+    const cl_int err = clBuildProgram(mCLProgram, 1, &deviceId, nullptr, nullptr, nullptr);
 
     if (err != CL_SUCCESS)
     {
         size_t size;
-        clGetProgramBuildInfo(mProgram, device.getDeviceID(), CL_PROGRAM_BUILD_LOG, 0, nullptr, &size);
+        clGetProgramBuildInfo(mCLProgram, deviceId, CL_PROGRAM_BUILD_LOG, 0, nullptr, &size);
         std::unique_ptr<char[]> buf(new char[size]);
-        clGetProgramBuildInfo(mProgram, device.getDeviceID(), CL_PROGRAM_BUILD_LOG, size, buf.get(), nullptr);
+        clGetProgramBuildInfo(mCLProgram, deviceId, CL_PROGRAM_BUILD_LOG, size, buf.get(), nullptr);
 
         // OpenCL should append \0 but it never hurts to safe-guard ourselves
         buf[size - 1] = '\0';
@@ -76,6 +77,30 @@ Device& Program::getDevice() const
 const std::string& Program::getSource() const
 {
     return mSource;
+}
+
+Kernel& Program::getKernel(const std::string& name)
+{
+    KernelMap::const_iterator it = mKernels.find(name);
+
+    if (it == mKernels.end())
+    {
+        Kernel* ret = new Kernel(*this, name);
+        mKernels.insert(std::make_pair(name, ret));
+        return *ret;
+    }
+
+    return *(it->second);
+}
+
+size_t Program::getKernelCount() const
+{
+    return mKernels.size();
+}
+
+cl_program Program::getCLProgram() const
+{
+    return mCLProgram;
 }
 
 }

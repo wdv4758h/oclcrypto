@@ -23,28 +23,33 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OCLCRYPTO_FORWARD_DECLS_H_
-#define OCLCRYPTO_FORWARD_DECLS_H_
-
-#include "oclcrypto/Config.h"
-
-#include <vector>
-#include <memory>
+#include "oclcrypto/Kernel.h"
+#include "oclcrypto/CLError.h"
+#include "oclcrypto/Program.h"
 
 namespace oclcrypto
 {
 
-class Device;
-class Kernel;
-class Program;
-class System;
-class Task;
-
-typedef std::vector<char> Buffer;
-
-typedef std::shared_ptr<Buffer> BufferPtr;
-typedef std::shared_ptr<const Buffer> ConstBufferPtr;
-
+Kernel::Kernel(Program& program, const std::string& name):
+    mProgram(program),
+    mName(name)
+{
+    cl_int err;
+    mKernel = clCreateKernel(program.getCLProgram(), name.c_str(), &err);
+    CLErrorGuard(err);
 }
 
-#endif
+Kernel::~Kernel()
+{}
+
+Program& Kernel::getProgram() const
+{
+    return mProgram;
+}
+
+const std::string& Kernel::getName() const
+{
+    return mName;
+}
+
+}

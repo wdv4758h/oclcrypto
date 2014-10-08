@@ -44,8 +44,8 @@ class Device
         Program& createProgram(const std::string& source);
         void destroyProgram(Program& program);
 
-        cl_device_id getDeviceID() const;
-        cl_context getContext() const;
+        cl_device_id getCLDeviceID() const;
+        cl_context getCLContext() const;
 
         unsigned int getCapacity() const;
 
@@ -54,10 +54,10 @@ class Device
         Device& operator=(const Device&) = delete;
 
     private:
-        cl_platform_id mPlatformID;
-        cl_device_id mDeviceID;
-        cl_context mContext;
-        cl_command_queue mQueue;
+        cl_platform_id mCLPlatformID;
+        cl_device_id mCLDeviceID;
+        cl_context mCLContext;
+        cl_command_queue mCLQueue;
 
         typedef std::vector<Program*> ProgramVector;
         ProgramVector mPrograms;

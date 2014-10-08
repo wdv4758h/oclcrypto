@@ -55,6 +55,11 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
         {
             // empty program should compile without exception
             oclcrypto::Program& empty = device.createProgram("");
+
+            BOOST_CHECK_EQUAL(empty.getKernelCount(), 0);
+            BOOST_CHECK_THROW(empty.getKernel("nonexistant"), oclcrypto::CLError);
+            BOOST_CHECK_EQUAL(empty.getKernelCount(), 0);
+
             device.destroyProgram(empty);
 
             // destroying it twice should cause exception
@@ -70,6 +75,19 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
                 "    positions[gid] += deltas[gid];\n"
                 "}\n"
             );
+
+            // nothing requested yet, so the expected kernel count is 0
+            BOOST_CHECK_EQUAL(simple.getKernelCount(), 0);
+            BOOST_CHECK_THROW(simple.getKernel("nonexistant"), oclcrypto::CLError);
+
+            simple.getKernel("translate");
+            // translate was requested, the kernel count should be 1 now
+            BOOST_CHECK_EQUAL(simple.getKernelCount(), 1);
+
+            // this should not create a new kernel, just fetch the existing one
+            // so kernel count should stay at 1
+            oclcrypto::Kernel& kernel = simple.getKernel("translate");
+            BOOST_CHECK_EQUAL(simple.getKernelCount(), 1);
         }
     }
 }
