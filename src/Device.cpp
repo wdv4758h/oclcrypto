@@ -79,6 +79,15 @@ Program& Device::createProgram(const std::string& source)
 void Device::destroyProgram(Program& program)
 {
     ProgramVector::iterator it = std::find(mPrograms.begin(), mPrograms.end(), &program);
+
+    if (it == mPrograms.end())
+        throw std::invalid_argument(
+            "Given Program has already been destroyed by this Device or "
+            "it belongs to another Device."
+        );
+
+    mPrograms.erase(it);
+    delete &program;
 }
 
 cl_device_id Device::getDeviceID() const

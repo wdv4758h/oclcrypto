@@ -46,12 +46,30 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
         oclcrypto::Device& device = system.getDevice(0);
-        BOOST_CHECK_THROW(device.createProgram("invalid $ syntax"), oclcrypto::CLProgramCompilationError);
 
-        // empty program should compile
         {
+            // invalid syntax has to throw exception
+            BOOST_CHECK_THROW(device.createProgram("invalid $ syntax"), oclcrypto::CLProgramCompilationError);
+        }
+
+        {
+            // empty program should compile without exception
             oclcrypto::Program& empty = device.createProgram("");
             device.destroyProgram(empty);
+
+            // destroying it twice should cause exception
+            BOOST_CHECK_THROW(device.destroyProgram(empty), std::invalid_argument);
+        }
+
+        {
+            // minimum one kernel program
+            oclcrypto::Program& simple = device.createProgram(
+                "__kernel void translate(__global float2* positions, __global float2* deltas)\n"
+                "{\n"
+                "    int gid = get_global_id(0);\n"
+                "    positions[gid] += deltas[gid];\n"
+                "}\n"
+            );
         }
     }
 }
