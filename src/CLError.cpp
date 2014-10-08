@@ -30,9 +30,13 @@ namespace oclcrypto
 {
 
 CLError::CLError(cl_int returnCode, const char* file, const unsigned int line, const char* func):
-    std::runtime_error(std::string("Encountered OpenCL error: '") + clErrorToString(returnCode) + "'. '" + file + "':" + std::to_string(line) + " - '" + func + "'."),
+    std::runtime_error(
+        std::string("Encountered OpenCL error: '") + CLError::clErrorToString(returnCode) + "'. '" +
+        file + "':" + std::to_string(line) + " - '" + func + "'."
+    ),
 
     mReturnCode(returnCode),
+
     mFile(file),
     mLine(line),
     mFunc(func)
@@ -141,5 +145,19 @@ const char* CLError::clErrorToString(cl_int error)
             return "Unknown error";
     }
 }
+
+CLProgramCompilationError::CLProgramCompilationError(cl_int returnCode, const std::string& log, const char* file, const unsigned int line, const char* func):
+    std::runtime_error(
+        std::string("Encountered OpenCL program compilation error: '") + CLError::clErrorToString(returnCode) + "'. '" +
+        file + "':" + std::to_string(line) + " - '" + func + "'.\nLog:\n" + log
+    ),
+
+    mReturnCode(returnCode),
+
+    mLog(log),
+    mFile(file),
+    mLine(line),
+    mFunc(func)
+{}
 
 }

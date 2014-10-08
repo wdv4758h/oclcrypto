@@ -33,18 +33,21 @@
 
 namespace oclcrypto
 {
-    class CLError : public std::runtime_error
-    {
-        public:
-            CLError(cl_int returnCode, const char* file, const unsigned int line, const char* func);
 
-            const cl_int mReturnCode;
-            const char* mFile;
-            const unsigned int mLine;
-            const char* mFunc;
+class CLError : public std::runtime_error
+{
+    public:
+        CLError(cl_int returnCode,
+                const char* file, const unsigned int line, const char* func);
 
-            static const char* clErrorToString(cl_int error);
-    };
+        const cl_int mReturnCode;
+
+        const char* mFile;
+        const unsigned int mLine;
+        const char* mFunc;
+
+        static const char* clErrorToString(cl_int error);
+};
 
 #ifdef NDEBUG
 #    define CLErrorGuard(call) _CLErrorGuard((call), nullptr, 0, nullptr)
@@ -59,6 +62,26 @@ inline void _CLErrorGuard(cl_int returnCode, const char* file, const unsigned in
 
     throw CLError(returnCode, file, line, func);
 }
+
+class CLProgramCompilationError : public std::runtime_error
+{
+    public:
+        CLProgramCompilationError(cl_int returnCode, const std::string& log,
+                                  const char* file, const unsigned int line, const char* func);
+
+        const cl_int mReturnCode;
+
+        const std::string mLog;
+        const char* mFile;
+        const unsigned int mLine;
+        const char* mFunc;
+};
+
+#ifdef NDEBUG
+#    define CLProgramCompilationErrorThrow(err, log) do { throw CLProgramCompilationError(err, log, nullptr, 0, nullptr); } while (false)
+#else
+#    define CLProgramCompilationErrorThrow(err, log) do { throw CLProgramCompilationError(err, log, __FILE__, __LINE__, __func__); } while (false)
+#endif
 
 }
 

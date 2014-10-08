@@ -51,6 +51,22 @@ System::System(bool useCPUs)
 System::~System()
 {}
 
+size_t System::getDeviceCount() const
+{
+    return mDevices.size();
+}
+
+Device& System::getDevice(size_t idx)
+{
+    DeviceMap::const_iterator it = mDevices.begin();
+    std::advance(it, idx);
+
+    if (it == mDevices.end())
+        throw std::out_of_range("Passed idx (" + std::to_string(idx) + ") is out of range. Number of devices: " + std::to_string(mDevices.size()));
+
+    return *(it->second);
+}
+
 void System::initializePlatform(cl_platform_id platform, bool useCPUs)
 {
     cl_device_type deviceType = useCPUs ?

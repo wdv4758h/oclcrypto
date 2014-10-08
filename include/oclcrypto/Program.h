@@ -23,24 +23,59 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <oclcrypto/System.h>
-#include <boost/test/unit_test.hpp>
-#include "TestSuiteFixture.h"
+#ifndef OCLCRYPTO_PROGRAM_H_
+#define OCLCRYPTO_PROGRAM_H_
 
-BOOST_AUTO_TEST_SUITE(InitDeinit)
+#include "oclcrypto/ForwardDecls.h"
+#include <CL/cl.h>
 
-BOOST_AUTO_TEST_CASE(InitWithCPUs)
+namespace oclcrypto
 {
-    oclcrypto::System system(true);
 
-    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
+/**
+ * @brief Represents one OpenCL program
+ *
+ * Program is created on one particular OpenCL device annd can't be shared
+ * between devices.
+ */
+class Program
+{
+    public:
+        /**
+         * @param source Source code of the program in ASCII
+         */
+        Program(Device& device, const std::string& source);
+
+        ~Program();
+
+        /**
+         * @brief Retrieves parent device of this program
+         *
+         * @note
+         * Device can't change once the class is constructed, programs can't
+         * be migrated to other devices.
+         */
+        Device& getDevice() const;
+
+        /**
+         * @brief Retrieves source code
+         *
+         * @note
+         * Source code can't change once the class is constructed
+         */
+        const std::string& getSource() const;
+
+        // noncopyable
+        Program(const Program&) = delete;
+        Program& operator=(const Program&) = delete;
+
+    private:
+        Device& mDevice;
+        const std::string mSource;
+
+        cl_program mProgram;
+};
+
 }
 
-BOOST_AUTO_TEST_CASE(InitWithoutCPUs)
-{
-    oclcrypto::System system(false);
-
-    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
+#endif

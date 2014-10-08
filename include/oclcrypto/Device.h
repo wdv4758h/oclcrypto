@@ -41,13 +41,26 @@ class Device
         Device(cl_platform_id platformID, cl_device_id deviceID);
         ~Device();
 
+        Program& createProgram(const std::string& source);
+        void destroyProgram(Program& program);
+
+        cl_device_id getDeviceID() const;
+        cl_context getContext() const;
+
         unsigned int getCapacity() const;
+
+        // noncopyable
+        Device(const Device&) = delete;
+        Device& operator=(const Device&) = delete;
 
     private:
         cl_platform_id mPlatformID;
         cl_device_id mDeviceID;
         cl_context mContext;
         cl_command_queue mQueue;
+
+        typedef std::vector<Program*> ProgramVector;
+        ProgramVector mPrograms;
 };
 
 }

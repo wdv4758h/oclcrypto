@@ -46,9 +46,6 @@ namespace oclcrypto
  * OpenCL itself will queue the jobs and split them up if the driver deems
  * it reasonable. If he have multiple GPUs or other OpenCL devices we still
  * want to queue the jobs in the best possible queue.
- *
- * This class is more of a namespace for functions than a real class.
- * It is a singleton in that sense.
  */
 class System
 {
@@ -65,18 +62,37 @@ class System
          */
         ~System();
 
-        static DeviceAllocationPtr allocateDevice(unsigned int workload = 1);
+        /**
+         * @brief Returns the amount of OpenCL devices available, including CPUs
+         */
+        size_t getDeviceCount() const;
+
+        /**
+         * @brief Allows you to iterate over available devices
+         *
+         * @param idx Index, at least 0 but lower than what getDeviceCount() returns
+         * @note Consider using the higher level API instead of this function.
+         * @note The order of devices is undefined and may change!
+         */
+        Device& getDevice(size_t idx);
+
+        //DeviceAllocationPtr allocateDevice(unsigned int workload = 1);
+
+        // noncopyable
+        System(const System&) = delete;
+        System& operator=(const System&) = delete;
 
     protected:
-        friend class DeviceAllocation;
+        //friend class DeviceAllocation;
 
-        void _notifyAllocation(Device* device, unsigned int workload);
-        void _notifyDeallocation(Device* device, unsigned int workload);
+        //void _notifyAllocation(Device* device, unsigned int workload);
+        //void _notifyDeallocation(Device* device, unsigned int workload);
 
     private:
         void initializePlatform(cl_platform_id platform, bool useCPUs);
 
-        std::multimap<int, Device*> mDevices;
+        typedef std::multimap<int, Device*> DeviceMap;
+        DeviceMap mDevices;
 };
 
 }

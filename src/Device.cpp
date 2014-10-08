@@ -25,6 +25,9 @@
 
 #include "oclcrypto/Device.h"
 #include "oclcrypto/CLError.h"
+#include "oclcrypto/Program.h"
+
+#include <algorithm>
 
 namespace oclcrypto
 {
@@ -47,6 +50,14 @@ Device::Device(cl_platform_id platformID, cl_device_id deviceID):
 
 Device::~Device()
 {
+    for (ProgramVector::reverse_iterator it = mPrograms.rbegin();
+         it != mPrograms.rend(); ++it)
+    {
+        // don't use destroyProgram here because that would change the vector needlessly
+        delete *it;
+    }
+    mPrograms.clear();
+
     try
     {
         CLErrorGuard(clReleaseCommandQueue(mQueue));
@@ -56,6 +67,28 @@ Device::~Device()
     {
         // TODO: log the exceptions
     }
+}
+
+Program& Device::createProgram(const std::string& source)
+{
+    Program* ret = new Program(*this, source);
+    mPrograms.push_back(ret);
+    return *ret;
+}
+
+void Device::destroyProgram(Program& program)
+{
+    ProgramVector::iterator it = std::find(mPrograms.begin(), mPrograms.end(), &program);
+}
+
+cl_device_id Device::getDeviceID() const
+{
+    return mDeviceID;
+}
+
+cl_context Device::getContext() const
+{
+    return mContext;
 }
 
 unsigned int Device::getCapacity() const

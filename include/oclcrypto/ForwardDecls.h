@@ -35,13 +35,12 @@ namespace oclcrypto
 {
 
 class Device;
-class DeviceAllocation;
-class DeviceManager;
+class Program;
+class System;
 class Task;
 
 typedef std::vector<char> Buffer;
 
-typedef std::shared_ptr<DeviceAllocation*> DeviceAllocationPtr;
 typedef std::shared_ptr<Buffer> BufferPtr;
 typedef std::shared_ptr<const Buffer> ConstBufferPtr;
 

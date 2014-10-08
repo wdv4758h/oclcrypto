@@ -24,23 +24,36 @@
  */
 
 #include <oclcrypto/System.h>
+#include <oclcrypto/Device.h>
+#include <oclcrypto/Program.h>
+#include <oclcrypto/CLError.h>
+
 #include <boost/test/unit_test.hpp>
+
 #include "TestSuiteFixture.h"
 
-BOOST_AUTO_TEST_SUITE(InitDeinit)
-
-BOOST_AUTO_TEST_CASE(InitWithCPUs)
+struct RawOpenCLFixture
 {
-    oclcrypto::System system(true);
+    oclcrypto::System system;
+};
 
-    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
-}
+BOOST_FIXTURE_TEST_SUITE(RawOpenCL, RawOpenCLFixture)
 
-BOOST_AUTO_TEST_CASE(InitWithoutCPUs)
+BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
 {
-    oclcrypto::System system(false);
-
     BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
+
+    for (size_t i = 0; i < system.getDeviceCount(); ++i)
+    {
+        oclcrypto::Device& device = system.getDevice(0);
+        BOOST_CHECK_THROW(device.createProgram("invalid $ syntax"), oclcrypto::CLProgramCompilationError);
+
+        // empty program should compile
+        {
+            oclcrypto::Program& empty = device.createProgram("");
+            device.destroyProgram(empty);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
