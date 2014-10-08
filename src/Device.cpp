@@ -64,6 +64,7 @@ Device::~Device()
     {
         CLErrorGuard(clReleaseCommandQueue(mCLQueue));
         CLErrorGuard(clReleaseContext(mCLContext));
+        CLErrorGuard(clReleaseDevice(mCLDeviceID));
     }
     catch (...) // can't throw in dtor
     {

@@ -54,7 +54,7 @@ class Kernel
         Program& mProgram;
         const std::string mName;
 
-        cl_kernel mKernel;
+        cl_kernel mCLKernel;
 };
 
 }

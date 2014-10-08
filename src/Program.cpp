@@ -67,7 +67,17 @@ Program::Program(Device& device, const std::string& source):
 }
 
 Program::~Program()
-{}
+{
+    for (KernelMap::const_iterator it = mKernels.begin();
+         it != mKernels.end(); ++it)
+    {
+        delete it->second;
+    }
+
+    mKernels.clear();
+
+    clReleaseProgram(mCLProgram);
+}
 
 Device& Program::getDevice() const
 {

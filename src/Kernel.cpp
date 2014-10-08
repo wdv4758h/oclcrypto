@@ -35,12 +35,21 @@ Kernel::Kernel(Program& program, const std::string& name):
     mName(name)
 {
     cl_int err;
-    mKernel = clCreateKernel(program.getCLProgram(), name.c_str(), &err);
+    mCLKernel = clCreateKernel(program.getCLProgram(), name.c_str(), &err);
     CLErrorGuard(err);
 }
 
 Kernel::~Kernel()
-{}
+{
+    try
+    {
+        CLErrorGuard(clReleaseKernel(mCLKernel));
+    }
+    catch (...)
+    {
+        // TODO: log
+    }
+}
 
 Program& Kernel::getProgram() const
 {
