@@ -26,6 +26,7 @@
 #include <oclcrypto/System.h>
 #include <oclcrypto/Device.h>
 #include <oclcrypto/Program.h>
+#include <oclcrypto/Kernel.h>
 #include <oclcrypto/CLError.h>
 
 #include <boost/test/unit_test.hpp>
@@ -38,10 +39,10 @@ struct RawOpenCLFixture
 };
 
 const char* translate_opencl =
-    "__kernel void translate(__global int* values, __global int* deltas)\n"
+    "__kernel void translate(__global int* values, __global int* deltas, int pod)\n"
     "{\n"
     "    int gid = get_global_id(0);\n"
-    "    values[gid] += deltas[gid];\n"
+    "    values[gid] += deltas[gid] * pod;\n"
     "}\n";
 
 BOOST_FIXTURE_TEST_SUITE(RawOpenCL, RawOpenCLFixture)
@@ -118,8 +119,11 @@ BOOST_AUTO_TEST_CASE(KernelArguments)
 
         {
             auto data = values.lockWrite<int>();
-            for (size_t j = 0; j < 16; ++j)
-                data[j] = static_cast<int>(j);
+            for (int j = 0; j < 16; ++j)
+                data[j] = j;
+
+            // out of bounds should throw
+            BOOST_CHECK_THROW(data[16] = 123, std::out_of_range);
 
             BOOST_CHECK_EQUAL(values.getLockState(), oclcrypto::DataBuffer::WriteLocked);
             data.flush();
@@ -131,18 +135,35 @@ BOOST_AUTO_TEST_CASE(KernelArguments)
         oclcrypto::DataBuffer& deltas = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Read);
         {
             auto data = deltas.lockWrite<int>();
-            for (size_t j = 0; j < 16; ++j)
-                data[j] = static_cast<int>(j);
+            for (int j = 0; j < 16; ++j)
+                data[j] = j;
 
             // it will get flushed automatically when going of of scope
             BOOST_CHECK_EQUAL(deltas.getLockState(), oclcrypto::DataBuffer::WriteLocked);
         }
         BOOST_CHECK_EQUAL(deltas.getLockState(), oclcrypto::DataBuffer::Unlocked);
 
-        /*
+        // the following write gets discarded
+        {
+            auto data = deltas.lockWrite<int>();
+            for (int j = 0; j < 16; ++j)
+                data[j] = j * 10;
+
+            BOOST_CHECK_EQUAL(deltas.getLockState(), oclcrypto::DataBuffer::WriteLocked);
+            data.discard();
+            // second discard should throw
+            BOOST_CHECK_THROW(data.discard(), std::runtime_error);
+            BOOST_CHECK_EQUAL(deltas.getLockState(), oclcrypto::DataBuffer::Unlocked);
+            // flushing after discard should throw
+            BOOST_CHECK_THROW(data.flush(), std::runtime_error);
+        }
+
+
         oclcrypto::Kernel& kernel = program.createKernel("translate");
         kernel.setParameter(0, values);
         kernel.setParameter(1, deltas);
+        kernel.setParameter(2, 1);
+        /*
         kernel.execute();
 
         {

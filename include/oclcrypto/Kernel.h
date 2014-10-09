@@ -50,11 +50,25 @@ class Kernel
 
         const std::string& getName() const;
 
+        void setParameter(size_t idx, DataBuffer& buffer);
+        template<typename T>
+        void setParameter(size_t idx, const T& value)
+        {
+            static_assert(
+                std::is_pod<T>::value,
+                "Only plain old data can be passed as the argument"
+            );
+
+            setParameterPOD(idx, sizeof(T), reinterpret_cast<const void*>(&value));
+        }
+
         // noncopyable
         Kernel(const Kernel&) = delete;
         Kernel& operator=(const Kernel&) = delete;
 
     private:
+        void setParameterPOD(size_t idx, size_t podSize, const void* pod);
+
         Program& mProgram;
         const std::string mName;
 

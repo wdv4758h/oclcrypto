@@ -67,6 +67,8 @@ class DataBuffer
             return mSize;
         }
 
+        cl_mem getCLMem() const;
+
         template<typename T>
         inline size_t getArraySize() const
         {
@@ -124,11 +126,17 @@ class DataBufferWriteLock
 
         inline T& operator[](const size_t idx)
         {
+            if (idx >= mBuffer.getArraySize<T>())
+                throw std::out_of_range("Index out of bounds");
+
             return mData[idx];
         }
 
         inline const T& operator[](const size_t idx) const
         {
+            if (idx >= mBuffer.getArraySize<T>())
+                throw std::out_of_range("Index out of bounds");
+
             return mData[idx];
         }
 

@@ -77,6 +77,11 @@ Device& DataBuffer::getDevice() const
     return mDevice;
 }
 
+cl_mem DataBuffer::getCLMem() const
+{
+    return mCLMem;
+}
+
 DataBuffer::LockState DataBuffer::getLockState() const
 {
     return mLockState;

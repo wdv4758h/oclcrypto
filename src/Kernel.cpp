@@ -26,6 +26,7 @@
 #include "oclcrypto/Kernel.h"
 #include "oclcrypto/CLError.h"
 #include "oclcrypto/Program.h"
+#include "oclcrypto/DataBuffer.h"
 
 namespace oclcrypto
 {
@@ -59,6 +60,16 @@ Program& Kernel::getProgram() const
 const std::string& Kernel::getName() const
 {
     return mName;
+}
+
+void Kernel::setParameter(size_t idx, DataBuffer& buffer)
+{
+    clSetKernelArg(mCLKernel, idx, sizeof(cl_mem), buffer.getCLMem());
+}
+
+void Kernel::setParameterPOD(size_t idx, size_t podSize, const void* pod)
+{
+    clSetKernelArg(mCLKernel, idx, podSize, pod);
 }
 
 }
