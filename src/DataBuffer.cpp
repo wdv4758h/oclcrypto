@@ -82,9 +82,23 @@ cl_mem DataBuffer::getCLMem() const
     return mCLMem;
 }
 
+const cl_mem* DataBuffer::getCLMemPtr() const
+{
+    return &mCLMem;
+}
+
 DataBuffer::LockState DataBuffer::getLockState() const
 {
     return mLockState;
+}
+
+void DataBuffer::lockAndReadRawData(void* data)
+{
+    if (mLockState != Unlocked)
+        throw std::runtime_error("This DataBuffer is already locked!");
+
+    mLockState = ReadLocked;
+    CLErrorGuard(clEnqueueReadBuffer(mDevice.getCLQueue(), mCLMem, CL_TRUE, 0, mSize, data, 0, nullptr, nullptr));
 }
 
 void DataBuffer::unlockAndWriteRawData(void* data, LockState expectedLockState)

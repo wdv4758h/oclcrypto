@@ -51,16 +51,24 @@ class Kernel
         const std::string& getName() const;
 
         void setParameter(size_t idx, DataBuffer& buffer);
+
+        /**
+         * @note
+         * The value pointer must point to valid memory until the parameter
+         * is set to something else.
+         */
         template<typename T>
-        void setParameter(size_t idx, const T& value)
+        void setParameter(size_t idx, const T* value)
         {
             static_assert(
                 std::is_pod<T>::value,
-                "Only plain old data can be passed as the argument"
+                "Only plain old data can be passed as an argument."
             );
 
-            setParameterPOD(idx, sizeof(T), reinterpret_cast<const void*>(&value));
+            setParameterPOD(idx, sizeof(T), reinterpret_cast<const void*>(value));
         }
+
+        void execute(size_t globalWorkSize, size_t localWorkSize, bool blockUntilComplete = true);
 
         // noncopyable
         Kernel(const Kernel&) = delete;

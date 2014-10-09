@@ -36,6 +36,8 @@ namespace oclcrypto
 
 class DataBuffer;
 template<typename T>
+class DataBufferReadLock;
+template<typename T>
 class DataBufferWriteLock;
 class Device;
 class Kernel;

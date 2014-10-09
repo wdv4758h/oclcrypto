@@ -27,6 +27,7 @@
 #include "oclcrypto/CLError.h"
 #include "oclcrypto/Program.h"
 #include "oclcrypto/DataBuffer.h"
+#include "oclcrypto/Device.h"
 
 namespace oclcrypto
 {
@@ -64,12 +65,25 @@ const std::string& Kernel::getName() const
 
 void Kernel::setParameter(size_t idx, DataBuffer& buffer)
 {
-    clSetKernelArg(mCLKernel, idx, sizeof(cl_mem), buffer.getCLMem());
+    CLErrorGuard(clSetKernelArg(mCLKernel, idx, sizeof(cl_mem), buffer.getCLMemPtr()));
 }
 
 void Kernel::setParameterPOD(size_t idx, size_t podSize, const void* pod)
 {
-    clSetKernelArg(mCLKernel, idx, podSize, pod);
+    CLErrorGuard(clSetKernelArg(mCLKernel, idx, podSize, pod));
+}
+
+void Kernel::execute(size_t globalWorkSize, size_t localWorkSize, bool blockUntilComplete)
+{
+    CLErrorGuard(
+        clEnqueueNDRangeKernel(
+            mProgram.getDevice().getCLQueue(), mCLKernel, 1, nullptr,
+            &globalWorkSize, &localWorkSize, 0, nullptr, nullptr
+        )
+    );
+
+    if (blockUntilComplete)
+        CLErrorGuard(clFinish(mProgram.getDevice().getCLQueue()));
 }
 
 }

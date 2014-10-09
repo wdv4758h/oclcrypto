@@ -69,6 +69,8 @@ class DataBuffer
 
         cl_mem getCLMem() const;
 
+        const cl_mem* getCLMemPtr() const;
+
         template<typename T>
         inline size_t getArraySize() const
         {
@@ -87,8 +89,12 @@ class DataBuffer
         LockState getLockState() const;
 
         template<typename T>
+        DataBufferReadLock<T> lockRead();
+
+        template<typename T>
         DataBufferWriteLock<T> lockWrite();
 
+        void lockAndReadRawData(void *data);
         void unlockAndWriteRawData(void* data, LockState expectedLockState);
         void discardLock(LockState expectedLockState);
 
@@ -106,6 +112,67 @@ class DataBuffer
         cl_mem mCLMem;
 };
 
+template<typename T>
+class DataBufferReadLock
+{
+    public:
+        inline DataBufferReadLock(DataBuffer& buffer, T* data):
+            mBuffer(buffer),
+            mData(data)
+        {}
+
+        inline ~DataBufferReadLock()
+        {
+            if (mData)
+                unlock();
+        }
+
+        inline const T& operator[](const size_t idx) const
+        {
+            if (!mData)
+                throw std::runtime_error("This read lock has already been unlocked!");
+
+            if (idx >= mBuffer.getArraySize<T>())
+                throw std::out_of_range("Index out of bounds");
+
+            return mData[idx];
+        }
+
+        inline void unlock()
+        {
+            if (!mData)
+                throw std::runtime_error(
+                    "This DataBufferReadLock has already been unlocked, "
+                    "you can't unlock it twice!"
+                );
+
+            mBuffer.discardLock(DataBuffer::ReadLocked);
+            delete [] mData;
+            mData = nullptr;
+        }
+
+        // noncopyable
+        // but move constructible!
+        DataBufferReadLock(DataBufferReadLock&& other):
+            mBuffer(other.mBuffer),
+            mData(other.mData)
+        {}
+
+        DataBufferReadLock(const DataBufferReadLock&) = delete;
+        DataBufferReadLock& operator=(const DataBufferReadLock&) = delete;
+
+    private:
+        DataBuffer& mBuffer;
+        T* mData;
+};
+
+template<typename T>
+DataBufferReadLock<T> DataBuffer::lockRead()
+{
+    T* data = new T[getArraySize<T>()];
+    lockAndReadRawData(data);
+    return DataBufferReadLock<T>(*this, data);
+}
 template<typename T>
 class DataBufferWriteLock
 {
