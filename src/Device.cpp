@@ -103,6 +103,32 @@ cl_context Device::getCLContext() const
     return mCLContext;
 }
 
+cl_command_queue Device::getCLQueue() const
+{
+    return mCLQueue;
+}
+
+DataBuffer& Device::allocateBufferRaw(const size_t size, const unsigned short memFlags)
+{
+    DataBuffer* ret = new DataBuffer(*this, size, memFlags);
+    mDataBuffers.push_back(ret);
+    return *ret;
+}
+
+void Device::deallocateBuffer(DataBuffer& buffer)
+{
+    DataBufferVector::iterator it = std::find(mDataBuffers.begin(), mDataBuffers.end(), &buffer);
+
+    if (it == mDataBuffers.end())
+        throw std::invalid_argument(
+            "Given DataBuffer has already been destroyed by this Device or "
+            "it belongs to another Device."
+        );
+
+    mDataBuffers.erase(it);
+    delete &buffer;
+}
+
 unsigned int Device::getCapacity() const
 {
     // TODO: This is completely arbitrary for now

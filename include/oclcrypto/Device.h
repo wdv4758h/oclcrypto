@@ -27,6 +27,8 @@
 #define OCLCRYPTO_DEVICE_H_
 
 #include "oclcrypto/ForwardDecls.h"
+#include "oclcrypto/DataBuffer.h"
+
 #include <CL/cl.h>
 
 namespace oclcrypto
@@ -46,6 +48,17 @@ class Device
 
         cl_device_id getCLDeviceID() const;
         cl_context getCLContext() const;
+        cl_command_queue getCLQueue() const;
+
+        DataBuffer& allocateBufferRaw(const size_t size, const unsigned short memFlags = DataBuffer::ReadWrite);
+
+        template<typename T>
+        inline DataBuffer& allocateBuffer(const size_t count, const unsigned short memFlags = DataBuffer::ReadWrite)
+        {
+            return allocateBufferRaw(count * sizeof(T), memFlags);
+        }
+
+        void deallocateBuffer(DataBuffer& buffer);
 
         unsigned int getCapacity() const;
 
@@ -61,6 +74,9 @@ class Device
 
         typedef std::vector<Program*> ProgramVector;
         ProgramVector mPrograms;
+
+        typedef std::vector<DataBuffer*> DataBufferVector;
+        DataBufferVector mDataBuffers;
 };
 
 }
