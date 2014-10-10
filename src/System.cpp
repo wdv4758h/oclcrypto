@@ -50,7 +50,14 @@ System::System(bool useCPUs)
 }
 
 System::~System()
-{}
+{
+    for (DeviceMap::const_iterator it = mDevices.begin();
+         it != mDevices.end(); ++it)
+    {
+        delete it->second;
+    }
+    mDevices.clear();
+}
 
 size_t System::getDeviceCount() const
 {

@@ -60,6 +60,14 @@ Device::~Device()
     }
     mPrograms.clear();
 
+    for (DataBufferVector::reverse_iterator it = mDataBuffers.rbegin();
+         it != mDataBuffers.rend(); ++it)
+    {
+        // don't use deallocateBuffer here because that would change the vector needlessly
+        delete *it;
+    }
+    mDataBuffers.clear();
+
     try
     {
         CLErrorGuard(clReleaseCommandQueue(mCLQueue));
