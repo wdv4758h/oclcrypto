@@ -35,7 +35,7 @@ namespace oclcrypto
 /**
  * @brief Represents memory on an OpenCL device
  */
-class DataBuffer
+class OCLCRYPTO_EXPORT DataBuffer
 {
     public:
         enum MemFlags
@@ -173,6 +173,7 @@ DataBufferReadLock<T> DataBuffer::lockRead()
     lockAndReadRawData(data);
     return DataBufferReadLock<T>(*this, data);
 }
+
 template<typename T>
 class DataBufferWriteLock
 {

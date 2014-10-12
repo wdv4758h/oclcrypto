@@ -11,10 +11,14 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-std=c++11)
 endif()
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
 include(GNUInstallDirs)
 
 find_package(OpenCL REQUIRED)
-find_package(Boost 1.36.0 COMPONENTS unit_test_framework)
+find_package(Boost COMPONENTS unit_test_framework)
 
 # This is optional, only required if user wants to run cppcheck (unlikely)
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
@@ -26,7 +30,7 @@ set(LIBOCLCRYPTO_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}
 
-    ${BOOST_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
     ${OPENCL_INCLUDE_DIRS}
 )
 
@@ -45,10 +49,10 @@ add_library("oclcrypto" SHARED
 
 target_link_libraries("oclcrypto" ${LIBOCLCRYPTO_LINK_LIBRARIES})
 
-install(TARGETS "oclcrypto"
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/liboclcrypto"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+#install(TARGETS "oclcrypto"
+#    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+#install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/liboclcrypto"
+#    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 enable_testing()
 add_subdirectory(tests)

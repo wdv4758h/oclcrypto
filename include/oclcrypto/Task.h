@@ -49,7 +49,7 @@ enum TaskState
 /**
  * @brief
  */
-class Task
+class OCLCRYPTO_EXPORT Task
 {
     public:
         inline Task(Algorithm algorithm, ConstBufferPtr input, ConstBufferPtr secret, BufferPtr output):

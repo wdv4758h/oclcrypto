@@ -28,6 +28,7 @@
 #include "oclcrypto/Device.h"
 
 #include <vector>
+#include <string>
 
 namespace oclcrypto
 {

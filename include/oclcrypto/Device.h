@@ -37,7 +37,7 @@ namespace oclcrypto
 /**
  * @brief Represents one OpenCL device with a distinct cl_device_id
  */
-class Device
+class OCLCRYPTO_EXPORT Device
 {
     public:
         Device(cl_platform_id platformID, cl_device_id deviceID);

@@ -40,7 +40,7 @@ namespace oclcrypto
  * Program is created on one particular OpenCL device annd can't be shared
  * between devices.
  */
-class Program
+class OCLCRYPTO_EXPORT Program
 {
     public:
         /**

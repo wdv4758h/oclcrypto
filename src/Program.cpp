@@ -58,11 +58,11 @@ Program::Program(Device& device, const std::string& source):
     {
         size_t size;
         clGetProgramBuildInfo(mCLProgram, deviceId, CL_PROGRAM_BUILD_LOG, 0, nullptr, &size);
-        std::unique_ptr<char[]> buf(new char[size]);
+        std::unique_ptr<char[]> buf(new char[size + 1]);
         clGetProgramBuildInfo(mCLProgram, deviceId, CL_PROGRAM_BUILD_LOG, size, buf.get(), nullptr);
 
         // OpenCL should append \0 but it never hurts to safe-guard ourselves
-        buf[size - 1] = '\0';
+        buf[size] = '\0';
 
         CLProgramCompilationErrorThrow(err, std::string(buf.get()));
     }

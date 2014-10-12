@@ -39,7 +39,7 @@ namespace oclcrypto
  * used to run it. Since parameters are also paired with the kernel it does
  * make sense to create multiple kernels of the same function.
  */
-class Kernel
+class OCLCRYPTO_EXPORT Kernel
 {
     public:
         Kernel(Program& program, const std::string& name);

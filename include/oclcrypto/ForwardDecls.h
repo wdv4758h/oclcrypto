@@ -31,6 +31,12 @@
 #include <vector>
 #include <memory>
 
+#ifdef oclcrypto_EXPORTS
+#   define OCLCRYPTO_EXPORT __declspec(dllexport)
+#else
+#   define OCLCRYPTO_EXPORT __declspec(dllimport)
+#endif
+
 namespace oclcrypto
 {
 

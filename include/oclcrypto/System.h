@@ -47,7 +47,7 @@ namespace oclcrypto
  * it reasonable. If he have multiple GPUs or other OpenCL devices we still
  * want to queue the jobs in the best possible queue.
  */
-class System
+class OCLCRYPTO_EXPORT System
 {
     public:
         /**

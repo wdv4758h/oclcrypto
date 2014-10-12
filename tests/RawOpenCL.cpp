@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(DataBuffers)
 
 BOOST_AUTO_TEST_CASE(KernelExecution)
 {
-    /*BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
+    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
 
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
@@ -222,6 +222,11 @@ BOOST_AUTO_TEST_CASE(KernelExecution)
         }
         {
             oclcrypto::DataBuffer& input = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Read);
+            {
+                auto data = input.lockWrite<int>();
+                for (int j = 0; j < 16; ++j)
+                    data[j] = j;
+            }
             oclcrypto::DataBuffer& output = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Write);
             oclcrypto::Kernel& kernel = program.createKernel("square");
             kernel.setParameter(0, input);
@@ -243,7 +248,7 @@ BOOST_AUTO_TEST_CASE(KernelExecution)
                     BOOST_CHECK_EQUAL(data[j], j * j);
             }
         }
-    }*/
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

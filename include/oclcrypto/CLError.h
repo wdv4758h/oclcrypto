@@ -34,7 +34,7 @@
 namespace oclcrypto
 {
 
-class CLError : public std::runtime_error
+class OCLCRYPTO_EXPORT CLError : public std::runtime_error
 {
     public:
         CLError(cl_int returnCode,
@@ -52,7 +52,7 @@ class CLError : public std::runtime_error
 #ifdef NDEBUG
 #    define CLErrorGuard(call) _CLErrorGuard((call), nullptr, 0, nullptr)
 #else
-#    define CLErrorGuard(call) _CLErrorGuard((call), __FILE__, __LINE__, __func__)
+#    define CLErrorGuard(call) _CLErrorGuard((call), __FILE__, __LINE__, "")
 #endif
 
 inline void _CLErrorGuard(cl_int returnCode, const char* file, const unsigned int line, const char* func)
@@ -63,7 +63,7 @@ inline void _CLErrorGuard(cl_int returnCode, const char* file, const unsigned in
     throw CLError(returnCode, file, line, func);
 }
 
-class CLProgramCompilationError : public std::runtime_error
+class OCLCRYPTO_EXPORT CLProgramCompilationError : public std::runtime_error
 {
     public:
         CLProgramCompilationError(cl_int returnCode, const std::string& log,
@@ -78,9 +78,9 @@ class CLProgramCompilationError : public std::runtime_error
 };
 
 #ifdef NDEBUG
-#    define CLProgramCompilationErrorThrow(err, log) do { throw CLProgramCompilationError(err, log, nullptr, 0, nullptr); } while (false)
+#    define CLProgramCompilationErrorThrow(err, log) do { throw CLProgramCompilationError(err, log, __FILE__, __LINE__, ""); } while (false)
 #else
-#    define CLProgramCompilationErrorThrow(err, log) do { throw CLProgramCompilationError(err, log, __FILE__, __LINE__, __func__); } while (false)
+#    define CLProgramCompilationErrorThrow(err, log) do { throw CLProgramCompilationError(err, log, __FILE__, __LINE__, ""); } while (false)
 #endif
 
 }
