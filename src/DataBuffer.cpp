@@ -109,7 +109,7 @@ void DataBuffer::unlockAndWriteRawData(void* data, LockState expectedLockState)
     // OpenCL API is responsible for freeing the data buffer
     CLErrorGuard(clEnqueueWriteBuffer(mDevice.getCLQueue(), mCLMem, CL_FALSE, 0, mSize, data, 0, nullptr, nullptr));
     // TODO: workaround for pocl, the following clFinish should not be required!
-    clFinish(mDevice.getCLQueue());
+    CLErrorGuard(clFinish(mDevice.getCLQueue()));
 
     mLockState = Unlocked;
 }
