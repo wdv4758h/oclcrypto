@@ -1,5 +1,7 @@
 # customary build folder
 build/
 
+CMakeLists.txt.user
+
 # backup files
 *~
