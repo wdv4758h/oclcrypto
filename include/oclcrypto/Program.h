@@ -110,6 +110,24 @@ class OCLCRYPTO_EXPORT Program
         KernelVector mKernels;
 };
 
+/**
+ * @brief RAII program deleter
+ */
+class ScopedProgram
+{
+    public:
+        ScopedProgram(Program& program);
+        ~ScopedProgram();
+
+        inline Program* operator->()
+        {
+            return &mProgram;
+        }
+
+    private:
+        Program& mProgram;
+};
+
 }
 
 #endif

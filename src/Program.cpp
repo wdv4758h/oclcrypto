@@ -119,4 +119,13 @@ cl_program Program::getCLProgram() const
     return mCLProgram;
 }
 
+ScopedProgram::ScopedProgram(Program& program):
+    mProgram(program)
+{}
+
+ScopedProgram::~ScopedProgram()
+{
+    mProgram.getDevice().destroyProgram(mProgram);
+}
+
 }
