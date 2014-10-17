@@ -43,18 +43,22 @@ struct RawOpenCLFixture
 };
 
 const char* opencl_sample_code =
+    "__kernel void set_to_constant(__global int* output, int c)\n"
+    "{\n"
+    "    int gid = get_global_id(0);\n"
+    "    output[gid] = c;\n"
+    "}\n"
+    "\n"
     "__kernel void square(__global int* input, __global int* output)\n"
     "{\n"
     "    int gid = get_global_id(0);\n"
     "    output[gid] = input[gid] * input[gid];\n"
-    //"    printf(\"input[%i] is: %i\\n\", gid, input[gid]);\n"
     "}\n"
     "\n"
-    "__kernel void set_to_constant(__global int* output, int c)\n"
+    "__kernel void square_in_place(__global int* io)\n"
     "{\n"
     "    int gid = get_global_id(0);\n"
-    //"    printf(\"constant is: %i\\n\", c);\n"
-    "    output[gid] = c;\n"
+    "    io[gid] = io[gid] * io[gid];\n"
     "}\n";
 
 BOOST_FIXTURE_TEST_SUITE(RawOpenCL, RawOpenCLFixture)
@@ -187,7 +191,7 @@ BOOST_AUTO_TEST_CASE(DataBuffers)
     }
 }
 
-BOOST_AUTO_TEST_CASE(KernelExecution)
+BOOST_AUTO_TEST_CASE(KernelExecutionSetToConstant)
 {
     BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
 
@@ -220,6 +224,17 @@ BOOST_AUTO_TEST_CASE(KernelExecution)
                     BOOST_CHECK_EQUAL(data[j], param);
             }
         }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(KernelExecutionSquare)
+{
+    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
+
+    for (size_t i = 0; i < system.getDeviceCount(); ++i)
+    {
+        oclcrypto::Device& device = system.getDevice(i);
+        oclcrypto::Program& program = device.createProgram(opencl_sample_code);
         {
             oclcrypto::DataBuffer& input = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Read);
             {
@@ -246,6 +261,43 @@ BOOST_AUTO_TEST_CASE(KernelExecution)
                 auto data = output.lockRead<int>();
                 for (size_t j = 0; j < 16; ++j)
                     BOOST_CHECK_EQUAL(data[j], j * j);
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(KernelExecutionSquareInPlace)
+{
+    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
+
+    for (size_t i = 0; i < system.getDeviceCount(); ++i)
+    {
+        oclcrypto::Device& device = system.getDevice(i);
+        oclcrypto::Program& program = device.createProgram(opencl_sample_code);
+        {
+            oclcrypto::DataBuffer& io = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::ReadWrite);
+            {
+                auto data = io.lockWrite<int>();
+                for (int j = 0; j < 16; ++j)
+                    data[j] = j;
+            }
+            oclcrypto::Kernel& kernel = program.createKernel("square_in_place");
+            kernel.setParameter(0, io);
+
+            kernel.execute(16, 8);
+
+            {
+                auto data = io.lockRead<int>();
+                for (size_t j = 0; j < 16; ++j)
+                    BOOST_CHECK_EQUAL(data[j], j * j);
+            }
+
+            // another execution will change the values in place, we expect (j^2)^2 = j^4
+            kernel.execute(16, 1);
+            {
+                auto data = io.lockRead<int>();
+                for (size_t j = 0; j < 16; ++j)
+                    BOOST_CHECK_EQUAL(data[j], j * j * j * j);
             }
         }
     }
