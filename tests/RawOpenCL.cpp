@@ -31,8 +31,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "TestSuiteFixture.h"
-
 struct RawOpenCLFixture
 {
     RawOpenCLFixture():

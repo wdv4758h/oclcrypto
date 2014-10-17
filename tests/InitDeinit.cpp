@@ -25,7 +25,6 @@
 
 #include <oclcrypto/System.h>
 #include <boost/test/unit_test.hpp>
-#include "TestSuiteFixture.h"
 
 BOOST_AUTO_TEST_SUITE(InitDeinit)
 
