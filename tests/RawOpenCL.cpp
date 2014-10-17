@@ -93,30 +93,30 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
 
         {
             // minimum one kernel program
-            oclcrypto::Program& simple = device.createProgram(opencl_sample_code);
+            oclcrypto::ScopedProgram simple = device.createProgram(opencl_sample_code);
 
             // nothing requested yet, so the expected kernel count is 0
-            BOOST_CHECK_EQUAL(simple.getKernelCount(), 0);
+            BOOST_CHECK_EQUAL(simple->getKernelCount(), 0);
             // this crashes pocl
             //BOOST_CHECK_THROW(simple.createKernel("nonexistant"), oclcrypto::CLError);
             // kernel count still zero after error
-            BOOST_CHECK_EQUAL(simple.getKernelCount(), 0);
+            BOOST_CHECK_EQUAL(simple->getKernelCount(), 0);
 
-            oclcrypto::Kernel& kernel = simple.createKernel("square");
+            oclcrypto::Kernel& kernel = simple->createKernel("square");
             // translate was created, the kernel count should be 1 now
-            BOOST_CHECK_EQUAL(simple.getKernelCount(), 1);
+            BOOST_CHECK_EQUAL(simple->getKernelCount(), 1);
 
             {
                 // another kernel of the same function
-                oclcrypto::Kernel& kernel2 = simple.createKernel("square");
-                BOOST_CHECK_EQUAL(simple.getKernelCount(), 2);
-                simple.destroyKernel(kernel2);
-                BOOST_CHECK_EQUAL(simple.getKernelCount(), 1);
+                oclcrypto::Kernel& kernel2 = simple->createKernel("square");
+                BOOST_CHECK_EQUAL(simple->getKernelCount(), 2);
+                simple->destroyKernel(kernel2);
+                BOOST_CHECK_EQUAL(simple->getKernelCount(), 1);
             }
 
-            simple.destroyKernel(kernel);
+            simple->destroyKernel(kernel);
             // destroying twice should throw
-            BOOST_CHECK_THROW(simple.destroyKernel(kernel), std::invalid_argument);
+            BOOST_CHECK_THROW(simple->destroyKernel(kernel), std::invalid_argument);
         }
     }
 }
@@ -128,7 +128,6 @@ BOOST_AUTO_TEST_CASE(DataBuffers)
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
         oclcrypto::Device& device = system.getDevice(i);
-        oclcrypto::Program& program = device.createProgram(opencl_sample_code);
 
         oclcrypto::DataBuffer& output = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Write);
         BOOST_CHECK_EQUAL(output.getSize(), 16 * sizeof(int));
@@ -198,11 +197,11 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSetToConstant)
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
         oclcrypto::Device& device = system.getDevice(i);
-        oclcrypto::Program& program = device.createProgram(opencl_sample_code);
+        oclcrypto::ScopedProgram program = device.createProgram(opencl_sample_code);
 
         {
             oclcrypto::DataBuffer& output = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Write);
-            oclcrypto::Kernel& kernel = program.createKernel("set_to_constant");
+            oclcrypto::Kernel& kernel = program->createKernel("set_to_constant");
             //kernel.setParameter(0, input);
             kernel.setParameter(0, output);
             int param = 1;
@@ -234,7 +233,7 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSquare)
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
         oclcrypto::Device& device = system.getDevice(i);
-        oclcrypto::Program& program = device.createProgram(opencl_sample_code);
+        oclcrypto::ScopedProgram program = device.createProgram(opencl_sample_code);
         {
             oclcrypto::DataBuffer& input = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Read);
             {
@@ -243,7 +242,7 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSquare)
                     data[j] = j;
             }
             oclcrypto::DataBuffer& output = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Write);
-            oclcrypto::Kernel& kernel = program.createKernel("square");
+            oclcrypto::Kernel& kernel = program->createKernel("square");
             kernel.setParameter(0, input);
             kernel.setParameter(1, output);
 
@@ -273,7 +272,7 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSquareInPlace)
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
         oclcrypto::Device& device = system.getDevice(i);
-        oclcrypto::Program& program = device.createProgram(opencl_sample_code);
+        oclcrypto::ScopedProgram program = device.createProgram(opencl_sample_code);
         {
             oclcrypto::DataBuffer& io = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::ReadWrite);
             {
@@ -281,7 +280,7 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSquareInPlace)
                 for (int j = 0; j < 16; ++j)
                     data[j] = j;
             }
-            oclcrypto::Kernel& kernel = program.createKernel("square_in_place");
+            oclcrypto::Kernel& kernel = program->createKernel("square_in_place");
             kernel.setParameter(0, io);
 
             kernel.execute(16, 8);
