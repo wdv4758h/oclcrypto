@@ -40,16 +40,16 @@ class OCLCRYPTO_EXPORT DataBuffer
     public:
         enum MemFlags
         {
-            Read = 1,
-            Write = 2,
+            Read = 1 << 0,
+            Write = 1 << 1,
             ReadWrite = Read | Write
         };
 
         enum LockState
         {
-            Unlocked = 0,
-            ReadLocked = 1,
-            WriteLocked = 2,
+            Unlocked = 1 << 0,
+            ReadLocked = 1 << 1,
+            WriteLocked = 1 << 2,
             ReadWriteLocked = ReadLocked | WriteLocked
         };
 
