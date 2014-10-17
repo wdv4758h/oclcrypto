@@ -201,13 +201,12 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSetToConstant)
 
         {
             oclcrypto::DataBuffer& output = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Write);
-            oclcrypto::Kernel& kernel = program->createKernel("set_to_constant");
-            //kernel.setParameter(0, input);
-            kernel.setParameter(0, output);
+            oclcrypto::ScopedKernel kernel = program->createKernel("set_to_constant");
+            kernel->setParameter(0, output);
             int param = 1;
-            kernel.setParameter(1, &param);
+            kernel->setParameter(1, &param);
 
-            kernel.execute(16, 8);
+            kernel->execute(16, 8);
 
             {
                 auto data = output.lockRead<int>();
@@ -216,7 +215,7 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSetToConstant)
             }
 
             // multiple executions of the same kernel have to work
-            kernel.execute(16, 1);
+            kernel->execute(16, 1);
             {
                 auto data = output.lockRead<int>();
                 for (size_t j = 0; j < 16; ++j)
@@ -242,11 +241,11 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSquare)
                     data[j] = j;
             }
             oclcrypto::DataBuffer& output = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Write);
-            oclcrypto::Kernel& kernel = program->createKernel("square");
-            kernel.setParameter(0, input);
-            kernel.setParameter(1, output);
+            oclcrypto::ScopedKernel kernel = program->createKernel("square");
+            kernel->setParameter(0, input);
+            kernel->setParameter(1, output);
 
-            kernel.execute(16, 8);
+            kernel->execute(16, 8);
 
             {
                 auto data = output.lockRead<int>();
@@ -255,7 +254,7 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSquare)
             }
 
             // multiple executions of the same kernel have to work
-            kernel.execute(16, 1);
+            kernel->execute(16, 1);
             {
                 auto data = output.lockRead<int>();
                 for (size_t j = 0; j < 16; ++j)
@@ -280,10 +279,10 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSquareInPlace)
                 for (int j = 0; j < 16; ++j)
                     data[j] = j;
             }
-            oclcrypto::Kernel& kernel = program->createKernel("square_in_place");
-            kernel.setParameter(0, io);
+            oclcrypto::ScopedKernel kernel = program->createKernel("square_in_place");
+            kernel->setParameter(0, io);
 
-            kernel.execute(16, 8);
+            kernel->execute(16, 8);
 
             {
                 auto data = io.lockRead<int>();
@@ -292,7 +291,7 @@ BOOST_AUTO_TEST_CASE(KernelExecutionSquareInPlace)
             }
 
             // another execution will change the values in place, we expect (j^2)^2 = j^4
-            kernel.execute(16, 1);
+            kernel->execute(16, 1);
             {
                 auto data = io.lockRead<int>();
                 for (size_t j = 0; j < 16; ++j)
