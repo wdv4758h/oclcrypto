@@ -88,4 +88,13 @@ void Kernel::execute(size_t globalWorkSize, size_t localWorkSize, bool blockUnti
         CLErrorGuard(clFinish(queue));
 }
 
+ScopedKernel::ScopedKernel(Kernel& kernel):
+    mKernel(kernel)
+{}
+
+ScopedKernel::~ScopedKernel()
+{
+    mKernel.getProgram().destroyKernel(mKernel);
+}
+
 }

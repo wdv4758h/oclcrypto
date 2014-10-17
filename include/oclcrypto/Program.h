@@ -112,8 +112,15 @@ class OCLCRYPTO_EXPORT Program
 
 /**
  * @brief RAII program deleter
+ *
+ * @see ScopedKernel
+ *
+ * @note
+ * C++ guarantees reverse construction order for destruction. That means that
+ * scoped program that the scoped kernels were created from will be destroyed
+ * after the kernels.
  */
-class ScopedProgram
+class OCLCRYPTO_EXPORT ScopedProgram
 {
     public:
         ScopedProgram(Program& program);

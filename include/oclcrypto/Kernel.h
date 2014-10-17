@@ -83,6 +83,24 @@ class OCLCRYPTO_EXPORT Kernel
         cl_kernel mCLKernel;
 };
 
+/**
+ * @brief RAII kernel deleter
+ */
+class OCLCRYPTO_EXPORT ScopedKernel
+{
+    public:
+        ScopedKernel(Kernel& kernel);
+        ~ScopedKernel();
+
+        inline Kernel* operator->()
+        {
+            return &mKernel;
+        }
+
+    private:
+        Kernel& mKernel;
+};
+
 }
 
 #endif
