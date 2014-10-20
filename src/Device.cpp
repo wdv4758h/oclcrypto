@@ -72,7 +72,10 @@ Device::~Device()
     {
         CLErrorGuard(clReleaseCommandQueue(mCLQueue));
         CLErrorGuard(clReleaseContext(mCLContext));
-        //CLErrorGuard(clReleaseDevice(mCLDeviceID));
+
+        // We shall not call clReleaseDevice here, clReleaseDevice releases subdevices,
+        // not the main devices. Calling it here has strange effects on various OpenCL
+        // implementations
     }
     catch (...) // can't throw in dtor
     {
