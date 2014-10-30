@@ -25,6 +25,12 @@
 
 #include "oclcrypto/AES_ECB.h"
 #include "oclcrypto/Device.h"
+#include "oclcrypto/DataBuffer.h"
+#include "oclcrypto/Program.h"
+#include "oclcrypto/Kernel.h"
+#include "oclcrypto/System.h"
+
+#include <cassert>
 
 namespace oclcrypto
 {
@@ -222,22 +228,144 @@ unsigned char* AES_ECB_Encrypt::expandKeyRounds(const unsigned char* key, size_t
     return ret.release();
 }
 
-AES_ECB_Encrypt::AES_ECB_Encrypt(Device& device, size_t plaintextSize):
+AES_ECB_Encrypt::AES_ECB_Encrypt(System& system, Device& device):
+    mSystem(system),
     mDevice(device),
-    mPlaintextSize(plaintextSize)
+
+    mExpandedKey(nullptr),
+    mPlainText(nullptr),
+    mCipherText(nullptr)
+{}
+
+AES_ECB_Encrypt::~AES_ECB_Encrypt()
 {
-    if (plaintextSize <= 0)
-        throw std::invalid_argument("plaintextSize has to be greater than 0");
+    try
+    {
+        if (mExpandedKey)
+            mDevice.deallocateBuffer(*mExpandedKey);
+
+        if (mPlainText)
+            mDevice.deallocateBuffer(*mPlainText);
+
+        if (mCipherText)
+            mDevice.deallocateBuffer(*mCipherText);
+    }
+    catch (...)
+    {
+        // TODO: log?
+    }
 }
 
-void AES_ECB_Encrypt::setKey(const char* key, size_t size)
+void AES_ECB_Encrypt::setKey(const unsigned char* key, size_t size)
 {
     if (key == nullptr)
         throw std::invalid_argument("non-null key is required");
 
     if (!(size == 16 || size == 24 || size == 32))
-        throw std::invalid_argument("Make sure key size is 16, 24 or 32 (in bytes)");
+        throw std::invalid_argument("Can't use given key of size " + std::to_string(size) + ". Make sure key size is 16, 24 or 32 (in bytes).");
 
+    size_t rounds = 0;
+    std::unique_ptr<unsigned char[]> expandedKey(expandKeyRounds(key, size, rounds));
+
+    if (mExpandedKey)
+    {
+        mDevice.deallocateBuffer(*mExpandedKey);
+        mExpandedKey = nullptr;
+    }
+
+    mExpandedKey = &mDevice.allocateBuffer<unsigned char>(rounds * 16, DataBuffer::Read);
+    {
+        auto data = mExpandedKey->lockWrite<unsigned char>();
+        for (size_t i = 0; i < rounds * 16; ++i)
+            data[i] = expandedKey[i];
+    }
+}
+
+void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
+{
+    if (plaintext == nullptr)
+        throw std::invalid_argument("non-null plaintext is required");
+
+    if (size == 0)
+        throw std::invalid_argument("Make sure plain text size greater than 0");
+
+    if (mPlainText)
+    {
+        mDevice.deallocateBuffer(*mPlainText);
+        mPlainText = nullptr;
+    }
+
+    mPlainText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Read);
+    {
+        auto data = mExpandedKey->lockWrite<unsigned char>();
+        for (size_t i = 0; i < size; ++i)
+            data[i] = plaintext[i];
+    }
+
+    // we changed plain text, so let us invalidate ciphertext if any
+    if (mCipherText)
+    {
+        mDevice.deallocateBuffer(*mCipherText);
+        mCipherText = nullptr;
+    }
+}
+
+void AES_ECB_Encrypt::execute()
+{
+    if (!mExpandedKey)
+        throw std::runtime_error("Key has not been set.");
+
+    if (!mPlainText)
+        throw std::runtime_error("Plaintext has not been set.");
+
+    if (mCipherText)
+        throw std::runtime_error("Ciphertext buffer is not NULL, perhaps"
+                                 "encryption has already been executed.");
+
+    Program* program = nullptr;
+
+    switch (mExpandedKey->getSize())
+    {
+        case 11 * 16: // 128bit mode
+            //program = &mSystem.getProgramFromCache(mDevice, AES_ECB_ENCRYPT_128);
+            break;
+
+        case 12 * 16: // 192bit mode
+            //program = &mSystem.getProgramFromCache(mDevice, AES_ECB_ENCRYPT_192);
+            break;
+
+        case 15 * 16: // 256bit mode
+            //program = &mSystem.getProgramFromCache(mDevice, AES_ECB_ENCRYPT_256);
+            break;
+
+        default:
+            throw std::runtime_error("Unexpected expanded key size.");
+    }
+
+    assert(program);
+
+    const size_t cipherTextSize = (mPlainText->getArraySize<unsigned char>() / 16 + 1) * 16;
+    mCipherText = &mDevice.allocateBuffer<unsigned char>(cipherTextSize, DataBuffer::Write);
+
+    try
+    {
+        ScopedKernel kernel(program->createKernel("main"));
+
+        kernel->setParameter(0, *mExpandedKey);
+        kernel->setParameter(1, *mPlainText);
+        mPlainTextSize = mPlainText->getArraySize<unsigned char>();
+        kernel->setParameter(2, &mPlainTextSize);
+        kernel->setParameter(3, *mCipherText);
+
+        // TODO: 16 is arbitrary here
+        kernel->execute(mPlainTextSize, 16);
+    }
+    catch (...)
+    {
+        mDevice.deallocateBuffer(*mCipherText);
+        mCipherText = nullptr;
+        throw;
+    }
 }
 
 }

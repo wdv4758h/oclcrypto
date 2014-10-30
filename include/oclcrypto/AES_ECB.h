@@ -54,10 +54,12 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
         /**
          * @brief AES_ECB_Encrypt
          *
+         * @param system oclcrypto central class
          * @param device Which device will be doing the encryption
-         * @param plaintextSize Size of the input plaintext, has to be greater than 0
          */
-        AES_ECB_Encrypt(Device& device, size_t plaintextSize);
+        AES_ECB_Encrypt(System& system, Device& device);
+
+        ~AES_ECB_Encrypt();
 
         /**
          * @brief setKey
@@ -65,17 +67,58 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
          * @param key buffer containing chars representing the key
          * @param size number of chars in the key, valid values are 16, 24 and 32
          */
-        void setKey(const char* key, size_t size);
+        void setKey(const unsigned char* key, size_t size);
 
-        template<size_t length>
-        void setKey(const char (&key)[length])
+        inline void setKey(const char* key, size_t size)
         {
-            setKey(&key[0], length);
+            setKey(reinterpret_cast<const unsigned char*>(key), size);
         }
 
+        template<size_t size>
+        inline void setKey(const unsigned char (&key)[size])
+        {
+            const size_t adjustedSize = key[size - 1] == 0x00 ? size - 1 : size;
+            setKey(&key[0], adjustedSize);
+        }
+
+        template<size_t size>
+        inline void setKey(const char (&key)[size])
+        {
+            const size_t adjustedSize = key[size - 1] == 0x00 ? size - 1 : size;
+            setKey(reinterpret_cast<const unsigned char*>(&key[0]), adjustedSize);
+        }
+
+        void setPlainText(const unsigned char* plaintext, size_t size);
+
+        inline void setPlainText(const char* plaintext, size_t size)
+        {
+            setPlainText(reinterpret_cast<const unsigned char*>(plaintext), size);
+        }
+
+        template<size_t size>
+        inline void setPlainText(const unsigned char (&plaintext)[size])
+        {
+            const size_t adjustedSize = plaintext[size - 1] == 0x00 ? size - 1 : size;
+            setPlainText(&plaintext[0], adjustedSize);
+        }
+
+        template<size_t size>
+        inline void setPlainText(const char (&plaintext)[size])
+        {
+            const size_t adjustedSize = plaintext[size - 1] == 0x00 ? size - 1 : size;
+            setPlainText(reinterpret_cast<const unsigned char*>(&plaintext[0]), adjustedSize);
+        }
+
+        void execute();
+
     private:
+        System& mSystem;
         Device& mDevice;
-        const size_t mPlaintextSize;
+
+        DataBuffer* mExpandedKey;
+        DataBuffer* mPlainText;
+        int mPlainTextSize;
+        DataBuffer* mCipherText;
 };
 
 }

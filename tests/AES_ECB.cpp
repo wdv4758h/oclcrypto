@@ -377,13 +377,10 @@ BOOST_AUTO_TEST_CASE(EncryptInvalid)
     {
         oclcrypto::Device& device = system.getDevice(i);
 
-        // empty plaintext?
-        BOOST_CHECK_THROW(oclcrypto::AES_ECB_Encrypt(device, 0), std::invalid_argument);
-
-        oclcrypto::AES_ECB_Encrypt encrypt(device, 1);
+        oclcrypto::AES_ECB_Encrypt encrypt(system, device);
 
         BOOST_CHECK_THROW(encrypt.setKey("abcd"), std::invalid_argument);
-        BOOST_CHECK_THROW(encrypt.setKey(nullptr, 16), std::invalid_argument);
+        BOOST_CHECK_THROW(encrypt.setKey(static_cast<const unsigned char*>(nullptr), 16), std::invalid_argument);
     }
 }
 
@@ -414,11 +411,11 @@ BOOST_AUTO_TEST_CASE(Encrypt128)
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
         oclcrypto::Device& device = system.getDevice(i);
-        /*
-        oclcrypto::AES_ECB_Encrypt encrypt(device, 64);
+
+        oclcrypto::AES_ECB_Encrypt encrypt(system, device);
         encrypt.setKey(key);
         encrypt.setPlainText(plaintext);
-
+        /*
         encrypt.execute();
 
         {
