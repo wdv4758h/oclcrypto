@@ -310,7 +310,7 @@ void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
     }
 }
 
-void AES_ECB_Encrypt::execute()
+void AES_ECB_Encrypt::execute(size_t localWorkSize)
 {
     if (!mExpandedKey)
         throw std::runtime_error("Key has not been set.");
@@ -322,43 +322,39 @@ void AES_ECB_Encrypt::execute()
         throw std::runtime_error("Ciphertext buffer is not NULL, perhaps"
                                  "encryption has already been executed.");
 
-    Program* program = nullptr;
+    Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES_ECB_ENCRYPT);
+    size_t rounds = 0;
 
     switch (mExpandedKey->getSize())
     {
         case 11 * 16: // 128bit mode
-            //program = &mSystem.getProgramFromCache(mDevice, AES_ECB_ENCRYPT_128);
+            rounds = 11;
             break;
 
         case 12 * 16: // 192bit mode
-            //program = &mSystem.getProgramFromCache(mDevice, AES_ECB_ENCRYPT_192);
+            rounds = 12;
             break;
 
         case 15 * 16: // 256bit mode
-            //program = &mSystem.getProgramFromCache(mDevice, AES_ECB_ENCRYPT_256);
+            rounds = 15;
             break;
 
         default:
             throw std::runtime_error("Unexpected expanded key size.");
     }
 
-    assert(program);
-
     const size_t cipherTextSize = (mPlainText->getArraySize<unsigned char>() / 16 + 1) * 16;
     mCipherText = &mDevice.allocateBuffer<unsigned char>(cipherTextSize, DataBuffer::Write);
 
     try
     {
-        ScopedKernel kernel(program->createKernel("main"));
+        ScopedKernel kernel(program.createKernel("main"));
 
         kernel->setParameter(0, *mExpandedKey);
         kernel->setParameter(1, *mPlainText);
-        mPlainTextSize = mPlainText->getArraySize<unsigned char>();
-        kernel->setParameter(2, &mPlainTextSize);
-        kernel->setParameter(3, *mCipherText);
+        kernel->setParameter(2, *mCipherText);
 
-        // TODO: 16 is arbitrary here
-        kernel->execute(mPlainTextSize, 16);
+        kernel->execute(mPlainText->getArraySize<unsigned char>(), localWorkSize);
     }
     catch (...)
     {

@@ -109,7 +109,7 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
             setPlainText(reinterpret_cast<const unsigned char*>(&plaintext[0]), adjustedSize);
         }
 
-        void execute();
+        void execute(size_t localWorkSize);
 
     private:
         System& mSystem;
@@ -117,7 +117,6 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
 
         DataBuffer* mExpandedKey;
         DataBuffer* mPlainText;
-        int mPlainTextSize;
         DataBuffer* mCipherText;
 };
 

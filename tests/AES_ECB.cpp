@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(Encrypt128)
         '\x33', '\x8b', '\xcd', '\x09', '\xeb', '\x68', '\x67', '\xf9',
         '\x07', '\x51', '\xa8', '\x2e', '\x87', '\xe4', '\x01', '\x4e',
         '\xfc', '\x6b', '\x87', '\x21', '\x60', '\x0d', '\xe1', '\x2a',
-    }; // 8 * 10 chars = 80 chars
+    }; // 8 * 10 chars = 80 chars = (64/16 + 1) * 16
 
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {

@@ -75,6 +75,27 @@ Device& System::getDevice(size_t idx)
     return *(it->second);
 }
 
+Program& System::getProgramFromCache(Device& device, ProgramSources::ProgramType type)
+{
+    DeviceProgramCacheMap::iterator it = mDeviceProgramCacheMap.find(&device);
+
+    if (it == mDeviceProgramCacheMap.end())
+        throw std::invalid_argument("Given device is unknown to this oclcrypto::System.");
+
+    ProgramCacheMap& map = it->second;
+    ProgramCacheMap::const_iterator pit = map.find(type);
+
+    if (pit == map.end())
+    {
+        // this program hasn't been cached yet, lets create it and cache it
+        Program& program = device.createProgram(ProgramSources::getProgramSource(type));
+        map[type] = &program;
+        return program;
+    }
+
+    return *pit->second;
+}
+
 void System::initializePlatform(cl_platform_id platform, bool useCPUs)
 {
     cl_device_type deviceType = useCPUs ?
@@ -93,6 +114,7 @@ void System::initializePlatform(cl_platform_id platform, bool useCPUs)
     {
         Device* device = new Device(platform, *it);
         mDevices.insert(std::make_pair(device->getCapacity(), device));
+        mDeviceProgramCacheMap[device] = ProgramCacheMap();
     }
 }
 

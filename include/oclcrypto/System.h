@@ -27,6 +27,7 @@
 #define OCLCRYPTO_SYSTEM_H_
 
 #include "oclcrypto/ForwardDecls.h"
+#include "oclcrypto/ProgramSources.h"
 
 // TODO: Hide CL dependency
 #include <CL/cl.h>
@@ -76,6 +77,21 @@ class OCLCRYPTO_EXPORT System
          */
         Device& getDevice(size_t idx);
 
+        /**
+         * @brief Retrieves given program type for given device from cache or create it
+         *
+         * @param device Which device will we run our desired program on
+         * @param type Type of the program, see ProgramSources
+         *
+         * @par
+         * The point of this method is to avoid compiling the same program sources
+         * over and over. Instead we compile them once and use multiple times.
+         *
+         * We still have to create a kernel per execution because we always want
+         * different arguments.
+         */
+        Program& getProgramFromCache(Device& device, ProgramSources::ProgramType type);
+
         //DeviceAllocationPtr allocateDevice(unsigned int workload = 1);
 
         // noncopyable
@@ -93,6 +109,11 @@ class OCLCRYPTO_EXPORT System
 
         typedef std::multimap<int, Device*> DeviceMap;
         DeviceMap mDevices;
+
+        typedef std::map<ProgramSources::ProgramType, Program*> ProgramCacheMap;
+        typedef std::map<Device*, ProgramCacheMap> DeviceProgramCacheMap;
+
+        DeviceProgramCacheMap mDeviceProgramCacheMap;
 };
 
 }
