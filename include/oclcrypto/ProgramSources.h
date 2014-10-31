@@ -36,8 +36,7 @@ class OCLCRYPTO_EXPORT ProgramSources
     public:
         enum ProgramType
         {
-            AES_ECB_ENCRYPT = 0,
-            AES_ECB_DECRYPT,
+            AES = 0,
 
             PROGRAM_COUNT
         };

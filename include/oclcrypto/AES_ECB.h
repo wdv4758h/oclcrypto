@@ -74,6 +74,7 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
             setKey(reinterpret_cast<const unsigned char*>(key), size);
         }
 
+        /*
         template<size_t size>
         inline void setKey(const unsigned char (&key)[size])
         {
@@ -86,7 +87,7 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
         {
             const size_t adjustedSize = key[size - 1] == 0x00 ? size - 1 : size;
             setKey(reinterpret_cast<const unsigned char*>(&key[0]), adjustedSize);
-        }
+        }*/
 
         void setPlainText(const unsigned char* plaintext, size_t size);
 
@@ -95,6 +96,7 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
             setPlainText(reinterpret_cast<const unsigned char*>(plaintext), size);
         }
 
+        /*
         template<size_t size>
         inline void setPlainText(const unsigned char (&plaintext)[size])
         {
@@ -107,9 +109,14 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
         {
             const size_t adjustedSize = plaintext[size - 1] == 0x00 ? size - 1 : size;
             setPlainText(reinterpret_cast<const unsigned char*>(&plaintext[0]), adjustedSize);
-        }
+        }*/
 
         void execute(size_t localWorkSize);
+
+        inline DataBuffer* getCipherText()
+        {
+            return mCipherText;
+        }
 
     private:
         System& mSystem;

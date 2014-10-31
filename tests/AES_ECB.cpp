@@ -25,6 +25,7 @@
 
 #include <oclcrypto/AES_ECB.h>
 #include <oclcrypto/System.h>
+#include <oclcrypto/DataBuffer.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -379,51 +380,53 @@ BOOST_AUTO_TEST_CASE(EncryptInvalid)
 
         oclcrypto::AES_ECB_Encrypt encrypt(system, device);
 
-        BOOST_CHECK_THROW(encrypt.setKey("abcd"), std::invalid_argument);
+        BOOST_CHECK_THROW(encrypt.setKey("abcd", 4), std::invalid_argument);
         BOOST_CHECK_THROW(encrypt.setKey(static_cast<const unsigned char*>(nullptr), 16), std::invalid_argument);
     }
 }
 
-// arbitrary text that's easy to see in debugger
-constexpr char plaintext[] = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~~"; // 64 chars
+// test vectors generated using openssl:
+// $ openssl aes-128-ecb -nosalt -K KEY -p -nopad -in plain -out cipher
 
 BOOST_AUTO_TEST_CASE(Encrypt128)
 {
     BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
 
-    constexpr char key[] = "0123456789abcdef"; // 16 chars, 128 bits
-    // openssl aes-128-ecb -nosalt -in plaintext.txt -out ciphertext.txt
-    // then convert each byte to hex
-    constexpr char expected_ciphertext[] =
     {
-        '\x14', '\x19', '\x1d', '\x69', '\x37', '\x0f', '\x8c', '\x5d',
-        '\xb5', '\xc3', '\xd8', '\xb7', '\x6d', '\x53', '\xbb', '\xa5',
-        '\x00', '\x92', '\xfb', '\x21', '\x85', '\x4a', '\xe1', '\x12',
-        '\x91', '\x9c', '\xd0', '\xff', '\x5a', '\x95', '\x2a', '\xd7',
-        '\x3a', '\xd0', '\xcd', '\x3d', '\xaa', '\x87', '\x13', '\xbb',
-        '\x93', '\xbb', '\x60', '\x70', '\xe2', '\x48', '\x51', '\xdb',
-        '\xad', '\x9a', '\x25', '\xb3', '\x58', '\xfb', '\x31', '\x0b',
-        '\x33', '\x8b', '\xcd', '\x09', '\xeb', '\x68', '\x67', '\xf9',
-        '\x07', '\x51', '\xa8', '\x2e', '\x87', '\xe4', '\x01', '\x4e',
-        '\xfc', '\x6b', '\x87', '\x21', '\x60', '\x0d', '\xe1', '\x2a',
-    }; // 8 * 10 chars = 80 chars = (64/16 + 1) * 16
-
-    for (size_t i = 0; i < system.getDeviceCount(); ++i)
-    {
-        oclcrypto::Device& device = system.getDevice(i);
-
-        oclcrypto::AES_ECB_Encrypt encrypt(system, device);
-        encrypt.setKey(key);
-        encrypt.setPlainText(plaintext);
-        /*
-        encrypt.execute();
-
+        constexpr unsigned char plaintext[] =
         {
-            auto data = encrypt.ciphertext.lockRead<char>();
-            for (size_t j = 0; j < 64; ++j)
-                BOOST_CHECK_EQUAL(data[j], expected_ciphertext[j]);
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        };
+
+        constexpr unsigned char key[] =
+        {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        };
+
+        constexpr unsigned char expected_ciphertext[] =
+        {
+            0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
+            0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e
+        };
+
+        for (size_t i = 0; i < system.getDeviceCount(); ++i)
+        {
+            oclcrypto::Device& device = system.getDevice(i);
+
+            oclcrypto::AES_ECB_Encrypt encrypt(system, device);
+            encrypt.setKey(key, 16);
+            encrypt.setPlainText(plaintext, 16);
+
+            encrypt.execute(1);
+
+            {
+                auto data = encrypt.getCipherText()->lockRead<unsigned char>();
+                for (size_t j = 0; j < data.size(); ++j)
+                    BOOST_CHECK_EQUAL(data[j], expected_ciphertext[j]);
+            }
         }
-        */
     }
 }
 

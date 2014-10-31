@@ -24,14 +24,14 @@
  */
 
 #include "oclcrypto/ProgramSources.h"
+#include "InbuiltProgramSources.inc"
 
 namespace oclcrypto
 {
 
 const char* ProgramSources::msSources[] =
 {
-    "a",
-    "b",
+    aes, // AES
     nullptr
 };
 

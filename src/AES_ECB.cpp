@@ -322,8 +322,8 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
         throw std::runtime_error("Ciphertext buffer is not NULL, perhaps"
                                  "encryption has already been executed.");
 
-    Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES_ECB_ENCRYPT);
-    size_t rounds = 0;
+    Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES);
+    cl_uint rounds = 0;
 
     switch (mExpandedKey->getSize())
     {
@@ -343,18 +343,24 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
             throw std::runtime_error("Unexpected expanded key size.");
     }
 
-    const size_t cipherTextSize = (mPlainText->getArraySize<unsigned char>() / 16 + 1) * 16;
+    const cl_uint plainTextSize = mPlainText->getArraySize<unsigned char>();
+    assert(plainTextSize % 16 == 0); // temporary limitation
+    const cl_uint cipherTextSize = plainTextSize;
+    const cl_uint blockCount = plainTextSize / 16;
+
     mCipherText = &mDevice.allocateBuffer<unsigned char>(cipherTextSize, DataBuffer::Write);
 
     try
     {
-        ScopedKernel kernel(program.createKernel("main"));
+        ScopedKernel kernel(program.createKernel("AES_ECB_Encrypt"));
 
-        kernel->setParameter(0, *mExpandedKey);
-        kernel->setParameter(1, *mPlainText);
+        kernel->setParameter(0, *mPlainText);
+        kernel->setParameter(1, *mExpandedKey);
         kernel->setParameter(2, *mCipherText);
+        kernel->setParameter(3, &rounds);
+        kernel->setParameter(4, &blockCount);
 
-        kernel->execute(mPlainText->getArraySize<unsigned char>(), localWorkSize);
+        kernel->execute(blockCount, localWorkSize);
     }
     catch (...)
     {

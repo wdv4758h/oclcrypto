@@ -23,6 +23,8 @@ find_package(Boost COMPONENTS unit_test_framework)
 # This is optional, only required if user wants to run cppcheck (unlikely)
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
 
+file(GLOB LIBOCLCRYPTO_OPENCL_SOURCES "${CMAKE_SOURCE_DIR}/opencl_src/*.c")
+
 file(GLOB LIBOCLCRYPTO_HEADERS "${CMAKE_SOURCE_DIR}/include/oclcrypto/*.h")
 file(GLOB LIBOCLCRYPTO_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
@@ -39,6 +41,19 @@ set(LIBOCLCRYPTO_LINK_LIBRARIES
 )
 
 configure_file("include/oclcrypto/Config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/oclcrypto/Config.h")
+
+set(INBUILT_PROGRAM_SOURCES "")
+foreach(CL_FILE ${LIBOCLCRYPTO_OPENCL_SOURCES})
+    get_filename_component(CL_BASENAME ${CL_FILE} NAME_WE)
+    set(INBUILT_PROGRAM_SOURCES "${INBUILT_PROGRAM_SOURCES}\nconstexpr char ${CL_BASENAME}[] = ")
+    file(STRINGS ${CL_FILE} CL_SOURCE)
+    foreach(LINE ${CL_SOURCE})
+        set(INBUILT_PROGRAM_SOURCES "${INBUILT_PROGRAM_SOURCES}\"${LINE}\\n\"\n")
+    endforeach()
+    set(INBUILT_PROGRAM_SOURCES "${INBUILT_PROGRAM_SOURCES};\n")
+endforeach()
+
+configure_file("src/InbuiltProgramSources.inc.in" "${CMAKE_CURRENT_BINARY_DIR}/InbuiltProgramSources.inc")
 
 include_directories(${LIBOCLCRYPTO_INCLUDE_DIRS})
 

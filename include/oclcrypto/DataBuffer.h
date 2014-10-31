@@ -127,12 +127,17 @@ class DataBufferReadLock
                 unlock();
         }
 
+        inline size_t size() const
+        {
+            return mBuffer.getArraySize<T>();
+        }
+
         inline const T& operator[](const size_t idx) const
         {
             if (!mData)
                 throw std::runtime_error("This read lock has already been unlocked!");
 
-            if (idx >= mBuffer.getArraySize<T>())
+            if (idx >= size())
                 throw std::out_of_range("Index out of bounds");
 
             return mData[idx];
