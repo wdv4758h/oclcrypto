@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(Encrypt128)
         }
     }
 }
-/*
+
 BOOST_AUTO_TEST_CASE(Encrypt192)
 {
     BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(Encrypt192)
             }
         }
     }
-}*/
+}
 
 BOOST_AUTO_TEST_CASE(Encrypt256)
 {
