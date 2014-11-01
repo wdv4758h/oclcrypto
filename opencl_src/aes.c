@@ -301,6 +301,7 @@ inline uchar16 AES_InverseMixColumns(uchar16 state)
            block.s0, block.s1, block.s2, block.s3, block.s4, block.s5, block.s6, block.s7);
     printf("0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n",
            block.s8, block.s9, block.sa, block.sb, block.sc, block.sd, block.se, block.sf);
+    printf("\n");
 }*/
 
 __kernel void AES_ECB_Encrypt(
@@ -318,6 +319,7 @@ __kernel void AES_ECB_Encrypt(
         uchar16 state = plainText[idx];
 
         state = AES_AddRoundKey(state, expandedKey[0]);
+        //AES_DebugPrintBlock(state);
 
         for (unsigned int i = 1; i < rounds - 1; ++i)
         {
@@ -325,11 +327,14 @@ __kernel void AES_ECB_Encrypt(
             state = AES_ShiftRows(state);
             state = AES_MixColumns(state);
             state = AES_AddRoundKey(state, expandedKey[i]);
+
+            //AES_DebugPrintBlock(state);
         }
 
         state = AES_SubBytes(state);
         state = AES_ShiftRows(state);
         state = AES_AddRoundKey(state, expandedKey[rounds - 1]);
+        //AES_DebugPrintBlock(state);
 
         cipherText[idx] = state;
     }
