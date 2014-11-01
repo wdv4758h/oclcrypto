@@ -294,14 +294,27 @@ inline uchar16 AES_InverseMixColumns(uchar16 state)
     );
 }
 
+/*inline void AES_DebugPrintBlock(uchar16 block)
+{
+    // 16 bytes, 8 bytes per line
+    printf("0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n",
+           block.s0, block.s1, block.s2, block.s3, block.s4, block.s5, block.s6, block.s7);
+    printf("0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n",
+           block.s8, block.s9, block.sa, block.sb, block.sc, block.sd, block.se, block.sf);
+}*/
+
 __kernel void AES_ECB_Encrypt(
-    __global uchar16* plainText, __global uchar16* expandedKey,
-    __global uchar16* cipherText,
+    __global __read_only uchar16* plainText, __global __read_only uchar16* expandedKey,
+    __global __write_only uchar16* cipherText,
     unsigned int rounds, unsigned int blockCount)
 {
+    //printf("rounds = %i\n", rounds);
+    //printf("blockCount = %i\n", blockCount);
+
     int idx = get_global_id(0);
     if (idx < blockCount)
     {
+        //AES_DebugPrintBlock(plainText[idx]);
         uchar16 state = plainText[idx];
 
         state = AES_AddRoundKey(state, expandedKey[0]);
