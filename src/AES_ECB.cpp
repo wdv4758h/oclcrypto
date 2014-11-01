@@ -298,7 +298,7 @@ void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
 
     mPlainText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Read);
     {
-        auto data = mExpandedKey->lockWrite<unsigned char>();
+        auto data = mPlainText->lockWrite<unsigned char>();
         for (size_t i = 0; i < size; ++i)
             data[i] = plaintext[i];
     }
