@@ -45,7 +45,7 @@ configure_file("include/oclcrypto/Config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/oclc
 set(INBUILT_PROGRAM_SOURCES "")
 foreach(CL_FILE ${LIBOCLCRYPTO_OPENCL_SOURCES})
     get_filename_component(CL_BASENAME ${CL_FILE} NAME_WE)
-    set(INBUILT_PROGRAM_SOURCES "${INBUILT_PROGRAM_SOURCES}\nconstexpr char ${CL_BASENAME}[] = ")
+    set(INBUILT_PROGRAM_SOURCES "${INBUILT_PROGRAM_SOURCES}\nconst char ${CL_BASENAME}[] = ")
     file(STRINGS ${CL_FILE} CL_SOURCE)
     foreach(LINE ${CL_SOURCE})
         set(INBUILT_PROGRAM_SOURCES "${INBUILT_PROGRAM_SOURCES}\"${LINE}\\n\"\n")

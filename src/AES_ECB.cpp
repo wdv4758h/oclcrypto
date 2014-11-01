@@ -31,6 +31,7 @@
 #include "oclcrypto/System.h"
 
 #include <cassert>
+#include <string>
 
 namespace oclcrypto
 {

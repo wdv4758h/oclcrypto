@@ -28,6 +28,7 @@
 
 #include "oclcrypto/ForwardDecls.h"
 #include <CL/cl.h>
+#include <string>
 
 namespace oclcrypto
 {
