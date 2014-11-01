@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule192)
         size_t rounds = 0;
         std::unique_ptr<unsigned char> output(oclcrypto::AES_ECB_Encrypt::expandKeyRounds(key, 24, rounds));
 
-        BOOST_CHECK_EQUAL(rounds, 12);
+        BOOST_CHECK_EQUAL(rounds, 13);
 
         for (size_t i = 0; i < rounds * 16; ++i)
         {
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule192)
         size_t rounds = 0;
         std::unique_ptr<unsigned char> output(oclcrypto::AES_ECB_Encrypt::expandKeyRounds(key, 24, rounds));
 
-        BOOST_CHECK_EQUAL(rounds, 12);
+        BOOST_CHECK_EQUAL(rounds, 13);
 
         for (size_t i = 0; i < rounds * 16; ++i)
         {
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule192)
         size_t rounds = 0;
         std::unique_ptr<unsigned char> output(oclcrypto::AES_ECB_Encrypt::expandKeyRounds(key, 24, rounds));
 
-        BOOST_CHECK_EQUAL(rounds, 12);
+        BOOST_CHECK_EQUAL(rounds, 13);
 
         for (size_t i = 0; i < rounds * 16; ++i)
         {

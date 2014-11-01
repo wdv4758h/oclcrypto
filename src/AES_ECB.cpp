@@ -134,7 +134,7 @@ static inline void expandKeyRounds192(const unsigned char* key, unsigned char* o
 
     /* We need 12 sets of sixteen bytes each for 192-bit mode */
     /* c starts at 24 because the first sub-key is the user-supplied key */
-    for (size_t c = 24; c < 12 * 16;)
+    for (size_t c = 24; c < 13 * 16;)
     {
         /* Copy the temporary variable over */
         for (size_t a = 0; a < 4; ++a)
@@ -196,7 +196,7 @@ unsigned char* AES_ECB_Encrypt::expandKeyRounds(const unsigned char* key, size_t
             rounds = 11;
             break;
         case 24:
-            rounds = 12;
+            rounds = 13;
             break;
         case 32:
             rounds = 15;
@@ -332,8 +332,8 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
             rounds = 11;
             break;
 
-        case 12 * 16: // 192bit mode
-            rounds = 12;
+        case 13 * 16: // 192bit mode
+            rounds = 13;
             break;
 
         case 15 * 16: // 256bit mode
