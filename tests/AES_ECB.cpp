@@ -385,14 +385,15 @@ BOOST_AUTO_TEST_CASE(EncryptInvalid)
     }
 }
 
-// test vectors generated using openssl:
-// $ openssl aes-128-ecb -nosalt -K KEY -p -nopad -in plain -out cipher
-
 BOOST_AUTO_TEST_CASE(Encrypt128)
 {
     BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
 
     {
+        // test vector generated using openssl:
+        // put 16x 0x00 into plain, then run:
+        // $ openssl aes-128-ecb -nosalt -K 00000000000000000000000000000000 -p -nopad -in plain -out cipher
+
         const unsigned char plaintext[] =
         {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -409,6 +410,45 @@ BOOST_AUTO_TEST_CASE(Encrypt128)
         {
             0x66, 0xe9, 0x4b, 0xd4, 0xef, 0x8a, 0x2c, 0x3b,
             0x88, 0x4c, 0xfa, 0x59, 0xca, 0x34, 0x2b, 0x2e
+        };
+
+        for (size_t i = 0; i < system.getDeviceCount(); ++i)
+        {
+            oclcrypto::Device& device = system.getDevice(i);
+
+            oclcrypto::AES_ECB_Encrypt encrypt(system, device);
+            encrypt.setKey(key, 16);
+            encrypt.setPlainText(plaintext, 16);
+
+            encrypt.execute(1);
+
+            {
+                auto data = encrypt.getCipherText()->lockRead<unsigned char>();
+                for (size_t j = 0; j < data.size(); ++j)
+                    BOOST_CHECK_EQUAL(data[j], expected_ciphertext[j]);
+            }
+        }
+    }
+
+    {
+        // test vector taken from FIPS 197, example C.1
+
+        const unsigned char plaintext[] =
+        {
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+            0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
+        };
+
+        const unsigned char key[] =
+        {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+        };
+
+        const unsigned char expected_ciphertext[] =
+        {
+            0x69, 0xc4, 0xe0, 0xd8, 0x6a, 0x7b, 0x04, 0x30,
+            0xd8, 0xcd, 0xb7, 0x80, 0x70, 0xb4, 0xc5, 0x5a
         };
 
         for (size_t i = 0; i < system.getDeviceCount(); ++i)
