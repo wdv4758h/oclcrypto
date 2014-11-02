@@ -80,7 +80,7 @@ void Kernel::execute(size_t globalWorkSize, size_t localWorkSize, bool blockUnti
     CLErrorGuard(
         clEnqueueNDRangeKernel(
             queue, mCLKernel, 1, nullptr,
-            &globalWorkSize, &localWorkSize, 0, nullptr, nullptr
+            &globalWorkSize, localWorkSize == 0 ? nullptr : &localWorkSize, 0, nullptr, nullptr
         )
     );
 
