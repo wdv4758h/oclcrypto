@@ -349,24 +349,15 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
     assert(plainTextSize % 16 == 0); // temporary limitation
     const cl_uint blockCount = plainTextSize / 16;
 
-    try
-    {
-        ScopedKernel kernel(program.createKernel("AES_ECB_Encrypt"));
+    ScopedKernel kernel(program.createKernel("AES_ECB_Encrypt"));
 
-        kernel->setParameter(0, *mPlainText);
-        kernel->setParameter(1, *mExpandedKey);
-        kernel->setParameter(2, *mCipherText);
-        kernel->setParameter(3, &rounds);
-        kernel->setParameter(4, &blockCount);
+    kernel->setParameter(0, *mPlainText);
+    kernel->setParameter(1, *mExpandedKey);
+    kernel->setParameter(2, *mCipherText);
+    kernel->setParameter(3, &rounds);
+    kernel->setParameter(4, &blockCount);
 
-        kernel->execute(blockCount, localWorkSize);
-    }
-    catch (...)
-    {
-        mDevice.deallocateBuffer(*mCipherText);
-        mCipherText = nullptr;
-        throw;
-    }
+    kernel->execute(blockCount, localWorkSize);
 }
 
 }
