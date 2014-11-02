@@ -357,7 +357,7 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
     kernel->setParameter(3, &rounds);
     kernel->setParameter(4, &blockCount);
 
-    kernel->execute(blockCount, localWorkSize);
+    kernel->execute(blockCount, localWorkSize, false);
 }
 
 }
