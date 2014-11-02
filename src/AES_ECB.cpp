@@ -291,6 +291,10 @@ void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
     if (size == 0)
         throw std::invalid_argument("Make sure plain text size greater than 0");
 
+    if (size % 16 != 0)
+        throw std::invalid_argument("Plaintext has to be padded to make full AES blocks. "
+                                    "Its size has to be a multiple of 16.");
+
     if (!mPlainText || mPlainText->getArraySize<unsigned char>() != size)
     {
         if (mPlainText)
@@ -305,16 +309,12 @@ void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
             data[i] = plaintext[i];
     }
 
-    const cl_uint plainTextSize = mPlainText->getArraySize<unsigned char>();
-    assert(plainTextSize % 16 == 0); // temporary limitation
-    const cl_uint cipherTextSize = plainTextSize;
-
-    if (!mCipherText || mCipherText->getArraySize<unsigned char>() != cipherTextSize)
+    if (!mCipherText || mCipherText->getArraySize<unsigned char>() != size)
     {
         if (mCipherText)
             mDevice.deallocateBuffer(*mCipherText);
 
-        mCipherText = &mDevice.allocateBuffer<unsigned char>(cipherTextSize, DataBuffer::Write);
+        mCipherText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Write);
     }
 }
 
@@ -351,7 +351,7 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
     }
 
     const cl_uint plainTextSize = mPlainText->getArraySize<unsigned char>();
-    assert(plainTextSize % 16 == 0); // temporary limitation
+    assert(plainTextSize % 16 == 0);
     const cl_uint blockCount = plainTextSize / 16;
 
     ScopedKernel kernel(program.createKernel("AES_ECB_Encrypt"));
