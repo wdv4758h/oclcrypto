@@ -43,11 +43,11 @@ boost::timer::cpu_times time_AES_ECB(
 
     boost::timer::cpu_timer timer;
     oclcrypto::AES_ECB_Encrypt encrypt(system, device);
-    encrypt.setKey(key.data(), key.size());
-    encrypt.setPlainText(plaintext.data(), plaintext.size());
 
     for (size_t j = 0; j < iterations; ++j)
     {
+        encrypt.setKey(key.data(), key.size());
+        encrypt.setPlainText(plaintext.data(), plaintext.size());
         encrypt.execute(256);
     }
 
@@ -56,7 +56,7 @@ boost::timer::cpu_times time_AES_ECB(
 
 void benchmark_AES_ECB(oclcrypto::System& system, size_t keySize, size_t plaintextSize)
 {
-    const unsigned int iterations = 500;
+    const unsigned int iterations = 100;
 
     std::cout << "Testing AES ECB " + std::to_string(keySize * 8) + "bit with " + std::to_string(plaintextSize) + "-byte random plaintexts" << std::endl;
 
@@ -79,7 +79,7 @@ void AES_ECB_Benchmarks()
     {
         const size_t keySize = 16 + keyMul * 8;
 
-        for (unsigned short plaintextMul = 1; plaintextMul <= 4; plaintextMul *= 2)
+        for (unsigned short plaintextMul = 1; plaintextMul <= 64; plaintextMul *= 2)
         {
             const size_t plaintextSize = 4096 * plaintextMul;
 
