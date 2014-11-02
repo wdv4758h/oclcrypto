@@ -294,7 +294,7 @@ inline uchar16 AES_InverseMixColumns(uchar16 state)
     );
 }
 
-/*inline void AES_DebugPrintBlock(uchar16 block)
+inline void AES_DebugPrintBlock(uchar16 block)
 {
     // 16 bytes, 8 bytes per line
     printf("0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n",
@@ -302,42 +302,58 @@ inline uchar16 AES_InverseMixColumns(uchar16 state)
     printf("0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n",
            block.s8, block.s9, block.sa, block.sb, block.sc, block.sd, block.se, block.sf);
     printf("\n");
-}*/
+}
 
 __kernel void AES_ECB_Encrypt(
-    __global __read_only uchar16* plainText, __constant uchar16* expandedKey,
-    __global __write_only uchar16* cipherText,
-    unsigned int rounds, unsigned int blockCount)
+    __global __read_only uchar16* restrict plainText, __constant uchar16* restrict expandedKey,
+    __global __write_only uchar16* restrict cipherText,
+    const unsigned int rounds,
+    __local uchar16* restrict cache)
 {
     //printf("rounds = %i\n", rounds);
     //printf("blockCount = %i\n", blockCount);
+    //printf("global id = %i, local id = %i, group id = %i\n", get_global_id(0), get_local_id(0), get_group_id(0));
 
-    int idx = get_global_id(0);
-    if (idx < blockCount)
+    const int global_id = get_global_id(0);
+    const int group_id = get_group_id(0);
+    const int local_id = get_local_id(0);
+    const int local_size = get_local_size(0);
+
+    event_t cacheEvent;
+    cacheEvent = async_work_group_copy(
+        cache,
+        plainText + (group_id * local_size),
+        local_size,
+        cacheEvent
+    );
+    wait_group_events(1, &cacheEvent);
+
+    uchar16 state = cache[local_id];
+
+    state = AES_AddRoundKey(state, expandedKey[0]);
+
+    for (unsigned int i = 1; i < rounds - 1; ++i)
     {
-        //AES_DebugPrintBlock(plainText[idx]);
-        uchar16 state = plainText[idx];
-
-        state = AES_AddRoundKey(state, expandedKey[0]);
-        //AES_DebugPrintBlock(state);
-
-        for (unsigned int i = 1; i < rounds - 1; ++i)
-        {
-            state = AES_SubBytes(state);
-            state = AES_ShiftRows(state);
-            state = AES_MixColumns(state);
-            state = AES_AddRoundKey(state, expandedKey[i]);
-
-            //AES_DebugPrintBlock(state);
-        }
-
         state = AES_SubBytes(state);
         state = AES_ShiftRows(state);
-        state = AES_AddRoundKey(state, expandedKey[rounds - 1]);
-        //AES_DebugPrintBlock(state);
-
-        cipherText[idx] = state;
+        state = AES_MixColumns(state);
+        state = AES_AddRoundKey(state, expandedKey[i]);
     }
+
+    state = AES_SubBytes(state);
+    state = AES_ShiftRows(state);
+    state = AES_AddRoundKey(state, expandedKey[rounds - 1]);
+
+    cache[local_id] = state;
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    cacheEvent = async_work_group_copy(
+        cipherText + (group_id * local_size),
+        cache,
+        local_size,
+        cacheEvent
+    );
 }
 
 __kernel void AES_ECB_Decrypt(

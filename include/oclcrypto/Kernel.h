@@ -68,6 +68,14 @@ class OCLCRYPTO_EXPORT Kernel
             setParameterPOD(idx, sizeof(T), reinterpret_cast<const void*>(value));
         }
 
+        void allocateLocalParameter(size_t idx, size_t elementSize, size_t elements);
+
+        template<typename T>
+        void allocateLocalParameter(size_t idx, size_t elements)
+        {
+            allocateLocalParameter(idx, sizeof(T), elements);
+        }
+
         void execute(size_t globalWorkSize, size_t localWorkSize, bool blockUntilComplete = true);
 
         // noncopyable

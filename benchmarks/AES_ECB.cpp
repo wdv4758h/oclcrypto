@@ -49,6 +49,7 @@ boost::timer::cpu_times time_AES_ECB(
         encrypt.setKey(key.data(), key.size());
         encrypt.setPlainText(plaintext.data(), plaintext.size());
         encrypt.execute(256);
+        auto lock = encrypt.getCipherText()->lockRead<unsigned char>();
     }
 
     return timer.elapsed();

@@ -73,6 +73,11 @@ void Kernel::setParameterPOD(size_t idx, size_t podSize, const void* pod)
     CLErrorGuard(clSetKernelArg(mCLKernel, idx, podSize, pod));
 }
 
+void Kernel::allocateLocalParameter(size_t idx, size_t elementSize, size_t elements)
+{
+    CLErrorGuard(clSetKernelArg(mCLKernel, idx, elementSize * elements, nullptr));
+}
+
 void Kernel::execute(size_t globalWorkSize, size_t localWorkSize, bool blockUntilComplete)
 {
     const cl_command_queue queue = mProgram.getDevice().getCLQueue();
