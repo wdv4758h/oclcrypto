@@ -30,6 +30,7 @@
 #include "oclcrypto/DataBuffer.h"
 
 #include <CL/cl.h>
+#include <string>
 
 namespace oclcrypto
 {
@@ -42,6 +43,8 @@ class OCLCRYPTO_EXPORT Device
     public:
         Device(cl_platform_id platformID, cl_device_id deviceID);
         ~Device();
+
+        std::string getName() const;
 
         Program& createProgram(const std::string& source);
         void destroyProgram(Program& program);

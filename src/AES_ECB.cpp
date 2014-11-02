@@ -309,6 +309,11 @@ void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
         mDevice.deallocateBuffer(*mCipherText);
         mCipherText = nullptr;
     }
+
+    const cl_uint plainTextSize = mPlainText->getArraySize<unsigned char>();
+    assert(plainTextSize % 16 == 0); // temporary limitation
+    const cl_uint cipherTextSize = plainTextSize;
+    mCipherText = &mDevice.allocateBuffer<unsigned char>(cipherTextSize, DataBuffer::Write);
 }
 
 void AES_ECB_Encrypt::execute(size_t localWorkSize)
@@ -318,10 +323,6 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
 
     if (!mPlainText)
         throw std::runtime_error("Plaintext has not been set.");
-
-    if (mCipherText)
-        throw std::runtime_error("Ciphertext buffer is not NULL, perhaps"
-                                 "encryption has already been executed.");
 
     Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES);
     cl_uint rounds = 0;
@@ -346,10 +347,7 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
 
     const cl_uint plainTextSize = mPlainText->getArraySize<unsigned char>();
     assert(plainTextSize % 16 == 0); // temporary limitation
-    const cl_uint cipherTextSize = plainTextSize;
     const cl_uint blockCount = plainTextSize / 16;
-
-    mCipherText = &mDevice.allocateBuffer<unsigned char>(cipherTextSize, DataBuffer::Write);
 
     try
     {

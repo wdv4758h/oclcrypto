@@ -83,6 +83,14 @@ Device::~Device()
     }
 }
 
+std::string Device::getName() const
+{
+    char buffer[256];
+    size_t retSize;
+    CLErrorGuard(clGetDeviceInfo(mCLDeviceID, CL_DEVICE_NAME, 256, buffer, &retSize));
+    return std::string(buffer, retSize);
+}
+
 Program& Device::createProgram(const std::string& source)
 {
     Program* ret = new Program(*this, source);

@@ -18,7 +18,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 include(GNUInstallDirs)
 
 find_package(OpenCL REQUIRED)
-find_package(Boost COMPONENTS unit_test_framework)
+find_package(Boost COMPONENTS system timer unit_test_framework)
 
 # This is optional, only required if user wants to run cppcheck (unlikely)
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
@@ -73,6 +73,8 @@ target_link_libraries("oclcrypto" ${LIBOCLCRYPTO_LINK_LIBRARIES})
 
 enable_testing()
 add_subdirectory(tests)
+
+add_subdirectory(benchmarks)
 
 if (CPPCHECK_EXECUTABLE)
     set(CPPCHECK_INCL_PARAMS -I /usr/include)
