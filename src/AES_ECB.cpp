@@ -268,13 +268,14 @@ void AES_ECB_Encrypt::setKey(const unsigned char* key, size_t size)
     size_t rounds = 0;
     std::unique_ptr<unsigned char[]> expandedKey(expandKeyRounds(key, size, rounds));
 
-    if (mExpandedKey)
+    if (!mExpandedKey || mExpandedKey->getArraySize<unsigned char>() != size)
     {
-        mDevice.deallocateBuffer(*mExpandedKey);
-        mExpandedKey = nullptr;
+        if (mExpandedKey)
+            mDevice.deallocateBuffer(*mExpandedKey);
+
+        mExpandedKey = &mDevice.allocateBuffer<unsigned char>(rounds * 16, DataBuffer::Read);
     }
 
-    mExpandedKey = &mDevice.allocateBuffer<unsigned char>(rounds * 16, DataBuffer::Read);
     {
         auto data = mExpandedKey->lockWrite<unsigned char>();
         for (size_t i = 0; i < rounds * 16; ++i)
@@ -290,30 +291,31 @@ void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
     if (size == 0)
         throw std::invalid_argument("Make sure plain text size greater than 0");
 
-    if (mPlainText)
+    if (!mPlainText || mPlainText->getArraySize<unsigned char>() != size)
     {
-        mDevice.deallocateBuffer(*mPlainText);
-        mPlainText = nullptr;
+        if (mPlainText)
+            mDevice.deallocateBuffer(*mPlainText);
+
+        mPlainText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Read);
     }
 
-    mPlainText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Read);
     {
         auto data = mPlainText->lockWrite<unsigned char>();
         for (size_t i = 0; i < size; ++i)
             data[i] = plaintext[i];
     }
 
-    // we changed plain text, so let us invalidate ciphertext if any
-    if (mCipherText)
-    {
-        mDevice.deallocateBuffer(*mCipherText);
-        mCipherText = nullptr;
-    }
-
     const cl_uint plainTextSize = mPlainText->getArraySize<unsigned char>();
     assert(plainTextSize % 16 == 0); // temporary limitation
     const cl_uint cipherTextSize = plainTextSize;
-    mCipherText = &mDevice.allocateBuffer<unsigned char>(cipherTextSize, DataBuffer::Write);
+
+    if (!mCipherText || mCipherText->getArraySize<unsigned char>() != cipherTextSize)
+    {
+        if (mCipherText)
+            mDevice.deallocateBuffer(*mCipherText);
+
+        mCipherText = &mDevice.allocateBuffer<unsigned char>(cipherTextSize, DataBuffer::Write);
+    }
 }
 
 void AES_ECB_Encrypt::execute(size_t localWorkSize)
@@ -323,6 +325,9 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
 
     if (!mPlainText)
         throw std::runtime_error("Plaintext has not been set.");
+
+    if (!mCipherText)
+        throw std::runtime_error("CipherText buffer has not been allocated! This is most likely a bug.");
 
     Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES);
     cl_uint rounds = 0;
@@ -355,7 +360,6 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
     kernel->setParameter(1, *mExpandedKey);
     kernel->setParameter(2, *mCipherText);
     kernel->setParameter(3, &rounds);
-    //kernel->setParameter(4, &blockCount);
     kernel->allocateLocalParameter<cl_uchar16>(4, localWorkSize);
 
     kernel->execute(blockCount, localWorkSize, false);
