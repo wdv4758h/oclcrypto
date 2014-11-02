@@ -58,7 +58,7 @@ void benchmark_AES_ECB(oclcrypto::System& system, size_t keySize, size_t plainte
 {
     const unsigned int iterations = 100;
 
-    std::cout << "Testing AES ECB " + std::to_string(keySize * 8) + "bit with " + std::to_string(plaintextSize) + "-byte random plaintexts" << std::endl;
+    std::cout << "AES ECB " + std::to_string(keySize * 8) + "bit with " + std::to_string(plaintextSize) + "-byte random plaintexts" << std::endl;
 
     for (size_t i = 0; i < system.getDeviceCount(); ++i)
     {
@@ -67,7 +67,7 @@ void benchmark_AES_ECB(oclcrypto::System& system, size_t keySize, size_t plainte
         const size_t totalBytes = iterations * plaintextSize;
         const double bytesPerSecond = (double)totalBytes / times.wall * 1000 * 1000 * 1000;
 
-        std::cout << (bytesPerSecond * 0.001) << " KB/sec on " << device.getName() << std::endl;
+        std::cout << " - " << (bytesPerSecond * 0.001) << " KB/sec on " << device.getName() << std::endl;
     }
 }
 
@@ -79,11 +79,12 @@ void AES_ECB_Benchmarks()
     {
         const size_t keySize = 16 + keyMul * 8;
 
-        for (unsigned short plaintextMul = 1; plaintextMul <= 64; plaintextMul *= 2)
+        for (unsigned short plaintextMul = 1; plaintextMul <= 128; plaintextMul *= 2)
         {
             const size_t plaintextSize = 4096 * plaintextMul;
 
             benchmark_AES_ECB(system, keySize, plaintextSize);
+            std::cout << std::endl;
         }
     }
 }
