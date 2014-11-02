@@ -48,7 +48,7 @@ boost::timer::cpu_times time_AES_ECB(
 
     for (size_t j = 0; j < iterations; ++j)
     {
-        encrypt.execute(0);
+        encrypt.execute(256);
     }
 
     return timer.elapsed();

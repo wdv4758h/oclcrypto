@@ -305,7 +305,7 @@ inline uchar16 AES_InverseMixColumns(uchar16 state)
 }*/
 
 __kernel void AES_ECB_Encrypt(
-    __global __read_only uchar16* plainText, __global __read_only uchar16* expandedKey,
+    __global __read_only uchar16* plainText, __constant uchar16* expandedKey,
     __global __write_only uchar16* cipherText,
     unsigned int rounds, unsigned int blockCount)
 {
