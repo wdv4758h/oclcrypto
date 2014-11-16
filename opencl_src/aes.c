@@ -391,3 +391,70 @@ __kernel void AES_ECB_Decrypt(
         cacheEvent
     );
 }
+
+void AES_CTR_IncrementIC(uchar16* ic, unsigned int id)
+{
+    // TODO: This will not carry over the last half!
+    //       We need some sort of a uint4_add function.
+
+    // because of endianess we need to flip
+    unsigned long last = (unsigned long)ic->sfedcba98;
+    last += id;
+
+    uchar8* last_uchar8 = (uchar8*)&last;
+    // and then flip it back :-/
+    ic->s8 = last_uchar8->s7;
+    ic->s9 = last_uchar8->s6;
+    ic->sa = last_uchar8->s5;
+    ic->sb = last_uchar8->s4;
+    ic->sc = last_uchar8->s3;
+    ic->sd = last_uchar8->s2;
+    ic->se = last_uchar8->s1;
+    ic->sf = last_uchar8->s0;
+}
+
+__kernel void AES_CTR_Encrypt(
+    __global __read_only uchar16* restrict plainText, __constant uchar16* restrict expandedKey, const uchar16 ic,
+    __global __write_only uchar16* restrict cipherText,
+    const unsigned int rounds,
+    __local uchar16* restrict cache)
+{
+    const int global_id = get_global_id(0);
+    const int group_id = get_group_id(0);
+    const int local_id = get_local_id(0);
+    const int local_size = get_local_size(0);
+
+    event_t cacheEvent;
+    cacheEvent = async_work_group_copy(
+        cache,
+        plainText + (group_id * local_size),
+        local_size,
+        cacheEvent
+    );
+    wait_group_events(1, &cacheEvent);
+
+    uchar16 state = ic;
+    AES_CTR_IncrementIC(&state, global_id);
+    state = AES_AddRoundKey(state, expandedKey[0]);
+
+    for (unsigned int i = 1; i < rounds - 1; ++i)
+    {
+        state = AES_SubBytes(state);
+        state = AES_ShiftRows(state);
+        state = AES_MixColumns(state);
+        state = AES_AddRoundKey(state, expandedKey[i]);
+    }
+
+    state = AES_SubBytes(state);
+    state = AES_ShiftRows(state);
+    cache[local_id] = cache[local_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    cacheEvent = async_work_group_copy(
+        cipherText + (group_id * local_size),
+        cache,
+        local_size,
+        cacheEvent
+    );
+}
