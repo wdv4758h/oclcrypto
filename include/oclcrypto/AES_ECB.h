@@ -31,10 +31,7 @@
 namespace oclcrypto
 {
 
-/**
- * @brief
- */
-class OCLCRYPTO_EXPORT AES_ECB_Encrypt
+class OCLCRYPTO_EXPORT AES_ECB_Base
 {
     public:
         static const unsigned char Sbox[256];
@@ -51,16 +48,11 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
          */
         static unsigned char* expandKeyRounds(const unsigned char* key, size_t keySize, size_t& rounds);
 
-        /**
-         * @brief AES_ECB_Encrypt
-         *
-         * @param system oclcrypto central class
-         * @param device Which device will be doing the encryption
-         */
-        AES_ECB_Encrypt(System& system, Device& device);
+    protected:
+        AES_ECB_Base(System& system, Device& device);
+        ~AES_ECB_Base();
 
-        ~AES_ECB_Encrypt();
-
+    public:
         /**
          * @brief setKey
          *
@@ -74,20 +66,29 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
             setKey(reinterpret_cast<const unsigned char*>(key), size);
         }
 
-        /*
-        template<size_t size>
-        inline void setKey(const unsigned char (&key)[size])
-        {
-            const size_t adjustedSize = key[size - 1] == 0x00 ? size - 1 : size;
-            setKey(&key[0], adjustedSize);
-        }
+    protected:
+        System& mSystem;
+        Device& mDevice;
 
-        template<size_t size>
-        inline void setKey(const char (&key)[size])
-        {
-            const size_t adjustedSize = key[size - 1] == 0x00 ? size - 1 : size;
-            setKey(reinterpret_cast<const unsigned char*>(&key[0]), adjustedSize);
-        }*/
+        DataBuffer* mExpandedKey;
+};
+
+/**
+ * @brief
+ */
+class OCLCRYPTO_EXPORT AES_ECB_Encrypt : public AES_ECB_Base
+{
+    public:
+
+        /**
+         * @brief AES_ECB_Encrypt
+         *
+         * @param system oclcrypto central class
+         * @param device Which device will be doing the encryption
+         */
+        AES_ECB_Encrypt(System& system, Device& device);
+        ~AES_ECB_Encrypt();
+
 
         void setPlainText(const unsigned char* plaintext, size_t size);
 
@@ -95,21 +96,6 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
         {
             setPlainText(reinterpret_cast<const unsigned char*>(plaintext), size);
         }
-
-        /*
-        template<size_t size>
-        inline void setPlainText(const unsigned char (&plaintext)[size])
-        {
-            const size_t adjustedSize = plaintext[size - 1] == 0x00 ? size - 1 : size;
-            setPlainText(&plaintext[0], adjustedSize);
-        }
-
-        template<size_t size>
-        inline void setPlainText(const char (&plaintext)[size])
-        {
-            const size_t adjustedSize = plaintext[size - 1] == 0x00 ? size - 1 : size;
-            setPlainText(reinterpret_cast<const unsigned char*>(&plaintext[0]), adjustedSize);
-        }*/
 
         void execute(size_t localWorkSize);
 
@@ -119,10 +105,6 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt
         }
 
     private:
-        System& mSystem;
-        Device& mDevice;
-
-        DataBuffer* mExpandedKey;
         DataBuffer* mPlainText;
         DataBuffer* mCipherText;
 };

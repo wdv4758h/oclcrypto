@@ -36,7 +36,7 @@
 namespace oclcrypto
 {
 
-const unsigned char AES_ECB_Encrypt::Sbox[256] =
+const unsigned char AES_ECB_Base::Sbox[256] =
 {
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -56,7 +56,7 @@ const unsigned char AES_ECB_Encrypt::Sbox[256] =
     0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 
-const unsigned char AES_ECB_Encrypt::Rcon[256] =
+const unsigned char AES_ECB_Base::Rcon[256] =
 {
     0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a,
     0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
@@ -187,7 +187,7 @@ static inline void expandKeyRounds256(const unsigned char* key, unsigned char* o
     }
 }
 
-unsigned char* AES_ECB_Encrypt::expandKeyRounds(const unsigned char* key, size_t keySize, size_t& rounds)
+unsigned char* AES_ECB_Base::expandKeyRounds(const unsigned char* key, size_t keySize, size_t& rounds)
 {
     // Size in bytes
     switch (keySize)
@@ -229,27 +229,19 @@ unsigned char* AES_ECB_Encrypt::expandKeyRounds(const unsigned char* key, size_t
     return ret.release();
 }
 
-AES_ECB_Encrypt::AES_ECB_Encrypt(System& system, Device& device):
+AES_ECB_Base::AES_ECB_Base(System &system, Device &device):
     mSystem(system),
     mDevice(device),
 
-    mExpandedKey(nullptr),
-    mPlainText(nullptr),
-    mCipherText(nullptr)
+    mExpandedKey(nullptr)
 {}
 
-AES_ECB_Encrypt::~AES_ECB_Encrypt()
+AES_ECB_Base::~AES_ECB_Base()
 {
     try
     {
         if (mExpandedKey)
             mDevice.deallocateBuffer(*mExpandedKey);
-
-        if (mPlainText)
-            mDevice.deallocateBuffer(*mPlainText);
-
-        if (mCipherText)
-            mDevice.deallocateBuffer(*mCipherText);
     }
     catch (...)
     {
@@ -257,7 +249,7 @@ AES_ECB_Encrypt::~AES_ECB_Encrypt()
     }
 }
 
-void AES_ECB_Encrypt::setKey(const unsigned char* key, size_t size)
+void AES_ECB_Base::setKey(const unsigned char* key, size_t size)
 {
     if (key == nullptr)
         throw std::invalid_argument("non-null key is required");
@@ -280,6 +272,32 @@ void AES_ECB_Encrypt::setKey(const unsigned char* key, size_t size)
         auto data = mExpandedKey->lockWrite<unsigned char>();
         for (size_t i = 0; i < rounds * 16; ++i)
             data[i] = expandedKey[i];
+    }
+}
+
+AES_ECB_Encrypt::AES_ECB_Encrypt(System& system, Device& device):
+    AES_ECB_Base(system, device),
+
+    mPlainText(nullptr),
+    mCipherText(nullptr)
+{}
+
+AES_ECB_Encrypt::~AES_ECB_Encrypt()
+{
+    try
+    {
+        if (mExpandedKey)
+            mDevice.deallocateBuffer(*mExpandedKey);
+
+        if (mPlainText)
+            mDevice.deallocateBuffer(*mPlainText);
+
+        if (mCipherText)
+            mDevice.deallocateBuffer(*mCipherText);
+    }
+    catch (...)
+    {
+        // TODO: log?
     }
 }
 
