@@ -880,4 +880,53 @@ BOOST_AUTO_TEST_CASE(Decrypt256)
     }
 }
 
+BOOST_AUTO_TEST_CASE(EncryptDecryptRoundTrip128)
+{
+    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
+
+    const size_t BUFFER_SIZE = 16 * 100;
+
+    unsigned char plaintext[BUFFER_SIZE];
+    for (size_t i = 0; i < BUFFER_SIZE; ++i)
+        plaintext[i] = 0x00;
+
+
+    const unsigned char key[] =
+    {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+    };
+
+    for (size_t i = 0; i < system.getDeviceCount(); ++i)
+    {
+        oclcrypto::Device& device = system.getDevice(i);
+
+        oclcrypto::AES_ECB_Encrypt encrypt(system, device);
+        encrypt.setKey(key, 16);
+        encrypt.setPlainText(plaintext, BUFFER_SIZE);
+
+        encrypt.execute(1);
+
+        unsigned char ciphertext[BUFFER_SIZE];
+
+        {
+            auto data = encrypt.getCipherText()->lockRead<unsigned char>();
+            for (size_t j = 0; j < data.size(); ++j)
+                ciphertext[j] = data[j];
+        }
+
+        oclcrypto::AES_ECB_Decrypt decrypt(system, device);
+        decrypt.setKey(key, 16);
+        decrypt.setCipherText(ciphertext, BUFFER_SIZE);
+
+        decrypt.execute(1);
+
+        {
+            auto data = decrypt.getPlainText()->lockRead<unsigned char>();
+            for (size_t j = 0; j < data.size(); ++j)
+                BOOST_CHECK_EQUAL(data[j], plaintext[j]);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
