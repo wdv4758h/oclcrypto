@@ -80,7 +80,7 @@ void AES_ECB_Benchmarks()
     {
         const size_t keySize = 16 + keyMul * 8;
 
-        for (unsigned short plaintextMul = 1; plaintextMul <= 128; plaintextMul *= 2)
+        for (unsigned short plaintextMul = 1; plaintextMul <= 128; plaintextMul *= 4)
         {
             const size_t plaintextSize = 4096 * plaintextMul;
 
