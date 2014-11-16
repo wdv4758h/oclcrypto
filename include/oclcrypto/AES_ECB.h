@@ -27,56 +27,15 @@
 #define OCLCRYPTO_AES_ECB_H_
 
 #include "oclcrypto/ForwardDecls.h"
+#include "oclcrypto/AES_Base.h"
 
 namespace oclcrypto
 {
 
-class OCLCRYPTO_EXPORT AES_ECB_Base
-{
-    public:
-        static const unsigned char Sbox[256];
-        static const unsigned char Rcon[256];
-
-        /**
-         * @brief Expand given AES key into key rounds
-         *
-         * @param key Input key
-         * @param keySize Number of chars in the input key, valid values are 16, 24 and 32
-         * @param rounds Will be filled with the number of rounds expanded
-         *
-         * @note The user of this method is reponsible for freeing the output.
-         */
-        static unsigned char* expandKeyRounds(const unsigned char* key, size_t keySize, size_t& rounds);
-
-    protected:
-        AES_ECB_Base(System& system, Device& device);
-        ~AES_ECB_Base();
-
-    public:
-        /**
-         * @brief setKey
-         *
-         * @param key buffer containing chars representing the key
-         * @param size number of chars in the key, valid values are 16, 24 and 32
-         */
-        void setKey(const unsigned char* key, size_t size);
-
-        inline void setKey(const char* key, size_t size)
-        {
-            setKey(reinterpret_cast<const unsigned char*>(key), size);
-        }
-
-    protected:
-        System& mSystem;
-        Device& mDevice;
-
-        DataBuffer* mExpandedKey;
-};
-
 /**
  * @brief Provides AES ECB encryption for 128, 192 and 256bit modes
  */
-class OCLCRYPTO_EXPORT AES_ECB_Encrypt : public AES_ECB_Base
+class OCLCRYPTO_EXPORT AES_ECB_Encrypt : public AES_Base
 {
     public:
         /**
@@ -110,7 +69,7 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt : public AES_ECB_Base
 /**
  * @brief Provides AES ECB decryption for 128, 192 and 256bit modes
  */
-class OCLCRYPTO_EXPORT AES_ECB_Decrypt : public AES_ECB_Base
+class OCLCRYPTO_EXPORT AES_ECB_Decrypt : public AES_Base
 {
     public:
         /**

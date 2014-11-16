@@ -55,6 +55,7 @@ class Program;
 class System;
 class Task;
 
+class AES_Base;
 class AES_ECB_Encrypt;
 class AES_ECB_Decrypt;
 
