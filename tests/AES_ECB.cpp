@@ -456,8 +456,8 @@ BOOST_AUTO_TEST_CASE(Encrypt128)
             oclcrypto::Device& device = system.getDevice(i);
 
             oclcrypto::AES_ECB_Encrypt encrypt(system, device);
-            encrypt.setKey(key, 16);
             encrypt.setPlainText(plaintext, 16);
+            encrypt.setKey(key, 16);
 
             encrypt.execute(1);
 
@@ -643,8 +643,8 @@ BOOST_AUTO_TEST_CASE(Decrypt128)
             oclcrypto::Device& device = system.getDevice(i);
 
             oclcrypto::AES_ECB_Decrypt decrypt(system, device);
-            decrypt.setKey(key, 16);
             decrypt.setCipherText(ciphertext, 16);
+            decrypt.setKey(key, 16);
 
             decrypt.execute(1);
 
