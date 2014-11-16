@@ -74,12 +74,11 @@ class OCLCRYPTO_EXPORT AES_ECB_Base
 };
 
 /**
- * @brief
+ * @brief Provides AES ECB encryption for 128, 192 and 256bit modes
  */
 class OCLCRYPTO_EXPORT AES_ECB_Encrypt : public AES_ECB_Base
 {
     public:
-
         /**
          * @brief AES_ECB_Encrypt
          *
@@ -88,7 +87,6 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt : public AES_ECB_Base
          */
         AES_ECB_Encrypt(System& system, Device& device);
         ~AES_ECB_Encrypt();
-
 
         void setPlainText(const unsigned char* plaintext, size_t size);
 
@@ -107,6 +105,40 @@ class OCLCRYPTO_EXPORT AES_ECB_Encrypt : public AES_ECB_Base
     private:
         DataBuffer* mPlainText;
         DataBuffer* mCipherText;
+};
+
+/**
+ * @brief Provides AES ECB decryption for 128, 192 and 256bit modes
+ */
+class OCLCRYPTO_EXPORT AES_ECB_Decrypt : public AES_ECB_Base
+{
+    public:
+        /**
+         * @brief AES_ECB_Decrypt
+         *
+         * @param system oclcrypto central class
+         * @param device Which device will be doing the encryption
+         */
+        AES_ECB_Decrypt(System& system, Device& device);
+        ~AES_ECB_Decrypt();
+
+        void setCipherText(const unsigned char* ciphertext, size_t size);
+
+        inline void setCipherText(const char* ciphertext, size_t size)
+        {
+            setCipherText(reinterpret_cast<const unsigned char*>(ciphertext), size);
+        }
+
+        void execute(size_t localWorkSize);
+
+        inline DataBuffer* getPlainText()
+        {
+            return mPlainText;
+        }
+
+    private:
+        DataBuffer* mCipherText;
+        DataBuffer* mPlainText;
 };
 
 }

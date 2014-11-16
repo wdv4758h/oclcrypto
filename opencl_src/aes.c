@@ -342,9 +342,7 @@ __kernel void AES_ECB_Encrypt(
 
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
-    state = AES_AddRoundKey(state, expandedKey[rounds - 1]);
-
-    cache[local_id] = state;
+    cache[local_id] = AES_AddRoundKey(state, expandedKey[rounds - 1]);
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -357,29 +355,47 @@ __kernel void AES_ECB_Encrypt(
 }
 
 __kernel void AES_ECB_Decrypt(
-    __global uchar16* cipherText, __global uchar16* expandedKey,
-    __global uchar16* plainText,
-    unsigned int rounds, unsigned int blockCount)
+    __global __read_only uchar16* restrict cipherText, __constant uchar16* restrict expandedKey,
+    __global __write_only uchar16* restrict plainText,
+    const unsigned int rounds,
+    __local uchar16* restrict cache)
 {
-    int idx = get_global_id(0);
-    if (idx < blockCount)
-    {
-        uchar16 state = cipherText[idx];
+    const int global_id = get_global_id(0);
+    const int group_id = get_group_id(0);
+    const int local_id = get_local_id(0);
+    const int local_size = get_local_size(0);
 
-        state = AES_AddRoundKey(state, expandedKey[rounds - 1]);
+    event_t cacheEvent;
+    cacheEvent = async_work_group_copy(
+        cache,
+        cipherText + (group_id * local_size),
+        local_size,
+        cacheEvent
+    );
+    wait_group_events(1, &cacheEvent);
+
+    uchar16 state = cache[local_id];
+
+    state = AES_AddRoundKey(state, expandedKey[rounds - 1]);
+    state = AES_InverseShiftRows(state);
+    state = AES_InverseSubBytes(state);
+
+    for (unsigned int i = rounds - 2; i >= 1; --i)
+    {
+        state = AES_AddRoundKey(state, expandedKey[i]);
+        state = AES_InverseMixColumns(state);
         state = AES_InverseShiftRows(state);
         state = AES_InverseSubBytes(state);
-
-        for (unsigned int i = rounds - 2; i >= 1; --i)
-        {
-            state = AES_AddRoundKey(state, expandedKey[i]);
-            state = AES_InverseMixColumns(state);
-            state = AES_InverseShiftRows(state);
-            state = AES_InverseSubBytes(state);
-        }
-
-        state = AES_AddRoundKey(state, expandedKey[0]);
-
-        plainText[idx] = state;
     }
+
+    cache[local_id] = AES_AddRoundKey(state, expandedKey[0]);
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    cacheEvent = async_work_group_copy(
+        plainText + (group_id * local_size),
+        cache,
+        local_size,
+        cacheEvent
+    );
 }

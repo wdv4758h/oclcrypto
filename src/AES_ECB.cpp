@@ -286,9 +286,6 @@ AES_ECB_Encrypt::~AES_ECB_Encrypt()
 {
     try
     {
-        if (mExpandedKey)
-            mDevice.deallocateBuffer(*mExpandedKey);
-
         if (mPlainText)
             mDevice.deallocateBuffer(*mPlainText);
 
@@ -304,10 +301,10 @@ AES_ECB_Encrypt::~AES_ECB_Encrypt()
 void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
 {
     if (plaintext == nullptr)
-        throw std::invalid_argument("non-null plaintext is required");
+        throw std::invalid_argument("Non-null plaintext is required");
 
     if (size == 0)
-        throw std::invalid_argument("Make sure plain text size greater than 0");
+        throw std::invalid_argument("Make sure plaintext size greater than 0");
 
     if (size % 16 != 0)
         throw std::invalid_argument("Plaintext has to be padded to make full AES blocks. "
@@ -377,6 +374,111 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
     kernel->setParameter(0, *mPlainText);
     kernel->setParameter(1, *mExpandedKey);
     kernel->setParameter(2, *mCipherText);
+    kernel->setParameter(3, &rounds);
+    kernel->allocateLocalParameter<cl_uchar16>(4, localWorkSize);
+
+    kernel->execute(blockCount, localWorkSize, false);
+}
+
+AES_ECB_Decrypt::AES_ECB_Decrypt(System& system, Device& device):
+    AES_ECB_Base(system, device),
+
+    mCipherText(nullptr),
+    mPlainText(nullptr)
+{}
+
+AES_ECB_Decrypt::~AES_ECB_Decrypt()
+{
+    try
+    {
+        if (mCipherText)
+            mDevice.deallocateBuffer(*mCipherText);
+
+        if (mPlainText)
+            mDevice.deallocateBuffer(*mPlainText);
+    }
+    catch (...)
+    {
+        // TODO: log?
+    }
+}
+
+void AES_ECB_Decrypt::setCipherText(const unsigned char* ciphertext, size_t size)
+{
+    if (ciphertext == nullptr)
+        throw std::invalid_argument("Non-null ciphertext is required");
+
+    if (size == 0)
+        throw std::invalid_argument("Make sure ciphertext size greater than 0");
+
+    if (size % 16 != 0)
+        throw std::invalid_argument("Ciphertext has to be padded to make full AES blocks. "
+                                    "Its size has to be a multiple of 16.");
+
+    if (!mCipherText || mCipherText->getArraySize<unsigned char>() != size)
+    {
+        if (mCipherText)
+            mDevice.deallocateBuffer(*mCipherText);
+
+        mCipherText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Read);
+    }
+
+    {
+        auto data = mCipherText->lockWrite<unsigned char>();
+        for (size_t i = 0; i < size; ++i)
+            data[i] = ciphertext[i];
+    }
+
+    if (!mPlainText || mPlainText->getArraySize<unsigned char>() != size)
+    {
+        if (mPlainText)
+            mDevice.deallocateBuffer(*mPlainText);
+
+        mPlainText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Write);
+    }
+}
+
+void AES_ECB_Decrypt::execute(size_t localWorkSize)
+{
+    if (!mExpandedKey)
+        throw std::runtime_error("Key has not been set.");
+
+    if (!mCipherText)
+        throw std::runtime_error("CipherText has not been set.");
+
+    if (!mPlainText)
+        throw std::runtime_error("PlainText buffer has not been allocated! This is most likely a bug.");
+
+    Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES);
+    cl_uint rounds = 0;
+
+    switch (mExpandedKey->getSize())
+    {
+        case 11 * 16: // 128bit mode
+            rounds = 11;
+            break;
+
+        case 13 * 16: // 192bit mode
+            rounds = 13;
+            break;
+
+        case 15 * 16: // 256bit mode
+            rounds = 15;
+            break;
+
+        default:
+            throw std::runtime_error("Unexpected expanded key size.");
+    }
+
+    const cl_uint cipherTextSize = mCipherText->getArraySize<unsigned char>();
+    assert(cipherTextSize % 16 == 0);
+    const cl_uint blockCount = cipherTextSize / 16;
+
+    ScopedKernel kernel(program.createKernel("AES_ECB_Decrypt"));
+
+    kernel->setParameter(0, *mCipherText);
+    kernel->setParameter(1, *mExpandedKey);
+    kernel->setParameter(2, *mPlainText);
     kernel->setParameter(3, &rounds);
     kernel->allocateLocalParameter<cl_uchar16>(4, localWorkSize);
 
