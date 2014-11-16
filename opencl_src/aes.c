@@ -310,10 +310,6 @@ __kernel void AES_ECB_Encrypt(
     const unsigned int rounds,
     __local uchar16* restrict cache)
 {
-    //printf("rounds = %i\n", rounds);
-    //printf("blockCount = %i\n", blockCount);
-    //printf("global id = %i, local id = %i, group id = %i\n", get_global_id(0), get_local_id(0), get_group_id(0));
-
     const int global_id = get_global_id(0);
     const int group_id = get_group_id(0);
     const int local_id = get_local_id(0);
@@ -328,9 +324,7 @@ __kernel void AES_ECB_Encrypt(
     );
     wait_group_events(1, &cacheEvent);
 
-    uchar16 state = cache[local_id];
-
-    state = AES_AddRoundKey(state, expandedKey[0]);
+    uchar16 state = AES_AddRoundKey(cache[local_id], expandedKey[0]);
 
     for (unsigned int i = 1; i < rounds - 1; ++i)
     {
@@ -374,9 +368,7 @@ __kernel void AES_ECB_Decrypt(
     );
     wait_group_events(1, &cacheEvent);
 
-    uchar16 state = cache[local_id];
-
-    state = AES_AddRoundKey(state, expandedKey[rounds - 1]);
+    uchar16 state = AES_AddRoundKey(cache[local_id], expandedKey[rounds - 1]);
     state = AES_InverseShiftRows(state);
     state = AES_InverseSubBytes(state);
 
