@@ -24,8 +24,10 @@
  */
 
 void AES_ECB_Benchmarks();
+void AES_CTR_Benchmarks();
 
 int main(int argc, char** argv)
 {
     AES_ECB_Benchmarks();
+    AES_CTR_Benchmarks();
 }
