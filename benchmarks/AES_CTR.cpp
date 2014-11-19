@@ -44,10 +44,10 @@ boost::timer::cpu_times time_AES_CTR(
 
     boost::timer::cpu_timer timer;
     oclcrypto::AES_CTR_Encrypt encrypt(system, device);
+    encrypt.setKey(key.data(), key.size());
 
     for (size_t j = 0; j < iterations; ++j)
     {
-        encrypt.setKey(key.data(), key.size());
         encrypt.setInitialCounter(ic.data());
         encrypt.setPlainText(plaintext.data(), plaintext.size());
         encrypt.execute(256);
