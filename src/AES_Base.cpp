@@ -185,7 +185,7 @@ static inline void expandKeyRounds256(const unsigned char* key, unsigned char* o
     }
 }
 
-unsigned char* AES_Base::expandKeyRounds(const unsigned char* key, size_t keySize, size_t& rounds)
+unsigned char* AES_Base::expandKeyRounds(const unsigned char* key, size_t keySize, unsigned short& rounds)
 {
     // Size in bytes
     switch (keySize)
@@ -231,6 +231,7 @@ AES_Base::AES_Base(System &system, Device &device):
     mSystem(system),
     mDevice(device),
 
+    mRounds(0),
     mExpandedKey(nullptr)
 {}
 
@@ -255,20 +256,19 @@ void AES_Base::setKey(const unsigned char* key, size_t size)
     if (!(size == 16 || size == 24 || size == 32))
         throw std::invalid_argument("Can't use given key of size " + std::to_string(size) + ". Make sure key size is 16, 24 or 32 (in bytes).");
 
-    size_t rounds = 0;
-    std::unique_ptr<unsigned char[]> expandedKey(expandKeyRounds(key, size, rounds));
+    std::unique_ptr<unsigned char[]> expandedKey(expandKeyRounds(key, size, mRounds));
 
     if (!mExpandedKey || mExpandedKey->getArraySize<unsigned char>() != size)
     {
         if (mExpandedKey)
             mDevice.deallocateBuffer(*mExpandedKey);
 
-        mExpandedKey = &mDevice.allocateBuffer<unsigned char>(rounds * 16, DataBuffer::Read);
+        mExpandedKey = &mDevice.allocateBuffer<unsigned char>(mRounds * 16, DataBuffer::Read);
     }
 
     {
         auto data = mExpandedKey->lockWrite<unsigned char>();
-        for (size_t i = 0; i < rounds * 16; ++i)
+        for (size_t i = 0; i < mRounds * 16; ++i)
             data[i] = expandedKey[i];
     }
 }

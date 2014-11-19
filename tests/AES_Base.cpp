@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule128)
             0xb4, 0xef, 0x5b, 0xcb, 0x3e, 0x92, 0xe2, 0x11, 0x23, 0xe9, 0x51, 0xcf, 0x6f, 0x8f, 0x18, 0x8e
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char[]> output(oclcrypto::AES_Base::expandKeyRounds(key, 16, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 11);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule128)
             0xd6, 0x0a, 0x35, 0x88, 0xe4, 0x72, 0xf0, 0x7b, 0x82, 0xd2, 0xd7, 0x85, 0x8c, 0xd7, 0xc3, 0x26
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char[]> output(oclcrypto::AES_Base::expandKeyRounds(key, 16, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 11);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule128)
             0xae, 0x12, 0x7c, 0xda, 0xdb, 0x47, 0x9b, 0xa8, 0xf2, 0x20, 0xdf, 0x3d, 0x48, 0x58, 0xf6, 0xb1
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char[]> output(oclcrypto::AES_Base::expandKeyRounds(key, 16, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 11);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule192)
             0x43, 0x2a, 0xc8, 0x86, 0xd8, 0x34, 0xc0, 0xb6, 0xd2, 0xc7, 0xdf, 0x11, 0x98, 0x4c, 0x59, 0x70,
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char> output(oclcrypto::AES_Base::expandKeyRounds(key, 24, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 13);
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule192)
             0x59, 0x8e, 0x48, 0x2f, 0xff, 0xae, 0xe3, 0x64, 0x3a, 0x98, 0x9a, 0xcd, 0x13, 0x30, 0xb4, 0x18
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char> output(oclcrypto::AES_Base::expandKeyRounds(key, 24, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 13);
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule192)
             0xa4, 0x97, 0x0a, 0x33, 0x1a, 0x78, 0xdc, 0x09, 0xc4, 0x18, 0xc2, 0x71, 0xe3, 0xa4, 0x1d, 0x5d
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char> output(oclcrypto::AES_Base::expandKeyRounds(key, 24, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 13);
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule256)
             0x10, 0xf8, 0x0a, 0x17, 0x53, 0xbf, 0x72, 0x9c, 0x45, 0xc9, 0x79, 0xe7, 0xcb, 0x70, 0x63, 0x85
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char[]> output(oclcrypto::AES_Base::expandKeyRounds(key, 32, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 15);
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule256)
             0x54, 0x6d, 0x42, 0x4f, 0x27, 0xde, 0x1e, 0x80, 0x88, 0x40, 0x2b, 0x5b, 0x4d, 0xae, 0x35, 0x5e
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char[]> output(oclcrypto::AES_Base::expandKeyRounds(key, 32, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 15);
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(KeySchedule256)
             0x24, 0xfc, 0x79, 0xcc, 0xbf, 0x09, 0x79, 0xe9, 0x37, 0x1a, 0xc2, 0x3c, 0x6d, 0x68, 0xde, 0x36
         };
 
-        size_t rounds = 0;
+        unsigned short rounds = 0;
         std::unique_ptr<unsigned char[]> output(oclcrypto::AES_Base::expandKeyRounds(key, 32, rounds));
 
         BOOST_CHECK_EQUAL(rounds, 15);

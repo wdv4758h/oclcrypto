@@ -112,25 +112,7 @@ void AES_CTR_Encrypt::execute(size_t localWorkSize)
         throw std::runtime_error("CipherText buffer has not been allocated! This is most likely a bug.");
 
     Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES);
-    cl_uint rounds = 0;
-
-    switch (mExpandedKey->getSize())
-    {
-        case 11 * 16: // 128bit mode
-            rounds = 11;
-            break;
-
-        case 13 * 16: // 192bit mode
-            rounds = 13;
-            break;
-
-        case 15 * 16: // 256bit mode
-            rounds = 15;
-            break;
-
-        default:
-            throw std::runtime_error("Unexpected expanded key size.");
-    }
+    cl_uint rounds = mRounds;
 
     const cl_uint plainTextSize = mPlainText->getArraySize<unsigned char>();
     assert(plainTextSize % 16 == 0);

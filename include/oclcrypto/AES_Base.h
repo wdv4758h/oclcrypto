@@ -46,7 +46,7 @@ class OCLCRYPTO_EXPORT AES_Base
          *
          * @note The user of this method is reponsible for freeing the output.
          */
-        static unsigned char* expandKeyRounds(const unsigned char* key, size_t keySize, size_t& rounds);
+        static unsigned char* expandKeyRounds(const unsigned char* key, size_t keySize, unsigned short& rounds);
 
     protected:
         AES_Base(System& system, Device& device);
@@ -70,6 +70,7 @@ class OCLCRYPTO_EXPORT AES_Base
         System& mSystem;
         Device& mDevice;
 
+        unsigned short mRounds;
         DataBuffer* mExpandedKey;
 };
 
