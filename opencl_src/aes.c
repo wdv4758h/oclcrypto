@@ -326,7 +326,7 @@ __kernel void AES_ECB_Encrypt(
 
     uchar16 state = AES_AddRoundKey(cache[local_id], expandedKey[0]);
 
-    for (unsigned int i = 1; i < rounds - 1; ++i)
+    for (int i = 1; i < rounds - 1; ++i)
     {
         state = AES_SubBytes(state);
         state = AES_ShiftRows(state);
@@ -372,7 +372,7 @@ __kernel void AES_ECB_Decrypt(
     state = AES_InverseShiftRows(state);
     state = AES_InverseSubBytes(state);
 
-    for (unsigned int i = rounds - 2; i >= 1; --i)
+    for (int i = rounds - 2; i >= 1; --i)
     {
         state = AES_AddRoundKey(state, expandedKey[i]);
         state = AES_InverseMixColumns(state);
@@ -437,7 +437,7 @@ __kernel void AES_CTR_Encrypt(
     AES_CTR_IncrementIC(&state, global_id);
     state = AES_AddRoundKey(state, expandedKey[0]);
 
-    for (unsigned int i = 1; i < rounds - 1; ++i)
+    for (int i = 1; i < rounds - 1; ++i)
     {
         state = AES_SubBytes(state);
         state = AES_ShiftRows(state);
