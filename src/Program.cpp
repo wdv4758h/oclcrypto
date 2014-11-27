@@ -52,7 +52,8 @@ Program::Program(Device& device, const std::string& source):
     }
 
     const cl_device_id deviceId = device.getCLDeviceID();
-    const cl_int err = clBuildProgram(mCLProgram, 1, &deviceId, nullptr, nullptr, nullptr);
+    const char* options = "-cl-strict-aliasing";
+    const cl_int err = clBuildProgram(mCLProgram, 1, &deviceId, options, nullptr, nullptr);
 
     if (err != CL_SUCCESS)
     {
