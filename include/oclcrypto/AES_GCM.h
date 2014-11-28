@@ -53,7 +53,7 @@ class OCLCRYPTO_EXPORT AES_GCM_Encrypt : public AES_Base
          * We expect the last 4 bytes to be zeros. No matter what they are
          * we ignore them. Doing generic IV incr in hardware is too slow.
          */
-        void setInitialVector(const unsigned char iv[16]);
+        void setInitialVector(const unsigned char iv[12]);
 
         void setPlainText(const unsigned char* plaintext, size_t size);
 
@@ -70,6 +70,8 @@ class OCLCRYPTO_EXPORT AES_GCM_Encrypt : public AES_Base
         }
 
     private:
+        // this is intentionally uchar16 and not uchar12,
+        // uchar12 cannot be efficiently handled in OpenCL
         cl_uchar16 mIV;
 
         DataBuffer* mPlainText;

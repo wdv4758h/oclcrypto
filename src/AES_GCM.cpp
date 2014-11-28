@@ -59,10 +59,13 @@ AES_GCM_Encrypt::~AES_GCM_Encrypt()
     }
 }
 
-void AES_GCM_Encrypt::setInitialVector(const unsigned char iv[16])
+void AES_GCM_Encrypt::setInitialVector(const unsigned char iv[12])
 {
-    for (size_t i = 0; i < 16; ++i)
+    for (size_t i = 0; i < 12; ++i)
         reinterpret_cast<unsigned char*>(&mIV)[i] = iv[i];
+
+    for (size_t i = 12; i < 16; ++i)
+        reinterpret_cast<unsigned char*>(&mIV)[i] = 0x00;
 }
 
 void AES_GCM_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
