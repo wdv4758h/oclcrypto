@@ -23,7 +23,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "oclcrypto/AES_ECB.h"
+#include "oclcrypto/AES_GCM.h"
 #include "oclcrypto/Device.h"
 #include "oclcrypto/DataBuffer.h"
 #include "oclcrypto/Program.h"
@@ -36,14 +36,14 @@
 namespace oclcrypto
 {
 
-AES_ECB_Encrypt::AES_ECB_Encrypt(System& system, Device& device):
+AES_GCM_Encrypt::AES_GCM_Encrypt(System& system, Device& device):
     AES_Base(system, device),
 
     mPlainText(nullptr),
     mCipherText(nullptr)
 {}
 
-AES_ECB_Encrypt::~AES_ECB_Encrypt()
+AES_GCM_Encrypt::~AES_GCM_Encrypt()
 {
     try
     {
@@ -59,7 +59,13 @@ AES_ECB_Encrypt::~AES_ECB_Encrypt()
     }
 }
 
-void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
+void AES_GCM_Encrypt::setInitialVector(const unsigned char iv[16])
+{
+    for (size_t i = 0; i < 16; ++i)
+        reinterpret_cast<unsigned char*>(&mIV)[i] = iv[i];
+}
+
+void AES_GCM_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
 {
     if (plaintext == nullptr)
         throw std::invalid_argument("Non-null plaintext is required");
@@ -94,7 +100,7 @@ void AES_ECB_Encrypt::setPlainText(const unsigned char* plaintext, size_t size)
     }
 }
 
-void AES_ECB_Encrypt::execute(size_t localWorkSize)
+void AES_GCM_Encrypt::execute(size_t localWorkSize)
 {
     if (!mExpandedKey)
         throw std::runtime_error("Key has not been set.");
@@ -112,100 +118,14 @@ void AES_ECB_Encrypt::execute(size_t localWorkSize)
     assert(plainTextSize % 16 == 0);
     const cl_uint blockCount = plainTextSize / 16;
 
-    ScopedKernel kernel(program.createKernel("AES_ECB_Encrypt"));
+    ScopedKernel kernel(program.createKernel("AES_GCM_Encrypt"));
 
     kernel->setParameter(0, *mPlainText);
     kernel->setParameter(1, *mExpandedKey);
-    kernel->setParameter(2, *mCipherText);
-    kernel->setParameter(3, &rounds);
-    kernel->allocateLocalParameter<cl_uchar16>(4, localWorkSize);
-
-    kernel->execute(blockCount, localWorkSize, false);
-}
-
-AES_ECB_Decrypt::AES_ECB_Decrypt(System& system, Device& device):
-    AES_Base(system, device),
-
-    mCipherText(nullptr),
-    mPlainText(nullptr)
-{}
-
-AES_ECB_Decrypt::~AES_ECB_Decrypt()
-{
-    try
-    {
-        if (mCipherText)
-            mDevice.deallocateBuffer(*mCipherText);
-
-        if (mPlainText)
-            mDevice.deallocateBuffer(*mPlainText);
-    }
-    catch (...)
-    {
-        // TODO: log?
-    }
-}
-
-void AES_ECB_Decrypt::setCipherText(const unsigned char* ciphertext, size_t size)
-{
-    if (ciphertext == nullptr)
-        throw std::invalid_argument("Non-null ciphertext is required");
-
-    if (size == 0)
-        throw std::invalid_argument("Make sure ciphertext size greater than 0");
-
-    if (size % 16 != 0)
-        throw std::invalid_argument("Ciphertext has to be padded to make full AES blocks. "
-                                    "Its size has to be a multiple of 16.");
-
-    if (!mCipherText || mCipherText->getArraySize<unsigned char>() != size)
-    {
-        if (mCipherText)
-            mDevice.deallocateBuffer(*mCipherText);
-
-        mCipherText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Read);
-    }
-
-    {
-        auto data = mCipherText->lockWrite<unsigned char>();
-        for (size_t i = 0; i < size; ++i)
-            data[i] = ciphertext[i];
-    }
-
-    if (!mPlainText || mPlainText->getArraySize<unsigned char>() != size)
-    {
-        if (mPlainText)
-            mDevice.deallocateBuffer(*mPlainText);
-
-        mPlainText = &mDevice.allocateBuffer<unsigned char>(size, DataBuffer::Write);
-    }
-}
-
-void AES_ECB_Decrypt::execute(size_t localWorkSize)
-{
-    if (!mExpandedKey)
-        throw std::runtime_error("Key has not been set.");
-
-    if (!mCipherText)
-        throw std::runtime_error("CipherText has not been set.");
-
-    if (!mPlainText)
-        throw std::runtime_error("PlainText buffer has not been allocated! This is most likely a bug.");
-
-    Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES);
-    cl_uint rounds = mRounds;
-
-    const cl_uint cipherTextSize = mCipherText->getArraySize<unsigned char>();
-    assert(cipherTextSize % 16 == 0);
-    const cl_uint blockCount = cipherTextSize / 16;
-
-    ScopedKernel kernel(program.createKernel("AES_ECB_Decrypt"));
-
-    kernel->setParameter(0, *mCipherText);
-    kernel->setParameter(1, *mExpandedKey);
-    kernel->setParameter(2, *mPlainText);
-    kernel->setParameter(3, &rounds);
-    kernel->allocateLocalParameter<cl_uchar16>(4, localWorkSize);
+    kernel->setParameter(2, &mIV);
+    kernel->setParameter(3, *mCipherText);
+    kernel->setParameter(4, &rounds);
+    kernel->allocateLocalParameter<cl_uchar16>(5, localWorkSize);
 
     kernel->execute(blockCount, localWorkSize, false);
 }

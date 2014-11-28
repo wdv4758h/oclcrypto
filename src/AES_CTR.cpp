@@ -112,7 +112,7 @@ void AES_CTR_Encrypt::execute(size_t localWorkSize)
         throw std::runtime_error("CipherText buffer has not been allocated! This is most likely a bug.");
 
     Program& program = mSystem.getProgramFromCache(mDevice, ProgramSources::AES);
-    cl_uint rounds = mRounds;
+    const cl_uint rounds = mRounds;
 
     const cl_uint plainTextSize = mPlainText->getArraySize<unsigned char>();
     assert(plainTextSize % 16 == 0);

@@ -23,8 +23,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef OCLCRYPTO_AES_CTR_H_
-#define OCLCRYPTO_AES_CTR_H_
+#ifndef OCLCRYPTO_AES_GCM_H_
+#define OCLCRYPTO_AES_GCM_H_
 
 #include "oclcrypto/ForwardDecls.h"
 #include "oclcrypto/AES_Base.h"
@@ -34,24 +34,26 @@ namespace oclcrypto
 {
 
 /**
- * @brief Provides AES CTR encryption for 128, 192 and 256bit modes
+ * @brief Provides AES GCM encryption for 128, 192 and 256bit modes
  */
-class OCLCRYPTO_EXPORT AES_CTR_Encrypt : public AES_Base
+class OCLCRYPTO_EXPORT AES_GCM_Encrypt : public AES_Base
 {
     public:
         /**
-         * @brief AES_CTR_Encrypt
+         * @brief AES_GCM_Encrypt
          *
          * @param system oclcrypto central class
          * @param device Which device will be doing the encryption
          */
-        AES_CTR_Encrypt(System& system, Device& device);
-        ~AES_CTR_Encrypt();
+        AES_GCM_Encrypt(System& system, Device& device);
+        ~AES_GCM_Encrypt();
 
         /**
-         * @note initial counter is also called 'nonce' in various materials
+         * @note initial vector is also called 'nonce' in various materials
+         * We expect the last 4 bytes to be zeros. No matter what they are
+         * we ignore them. Doing generic IV incr in hardware is too slow.
          */
-        void setInitialCounter(const unsigned char ic[16]);
+        void setInitialVector(const unsigned char iv[16]);
 
         void setPlainText(const unsigned char* plaintext, size_t size);
 
@@ -68,7 +70,7 @@ class OCLCRYPTO_EXPORT AES_CTR_Encrypt : public AES_Base
         }
 
     private:
-        cl_uchar16 mIC;
+        cl_uchar16 mIV;
 
         DataBuffer* mPlainText;
         DataBuffer* mCipherText;

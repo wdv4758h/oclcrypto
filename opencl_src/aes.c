@@ -458,3 +458,66 @@ __kernel void AES_CTR_Encrypt(
         cacheEvent
     );
 }
+
+void AES_GCM_IncrementIV(uchar16* iv, unsigned int id)
+{
+    // Assumes 96bit IV! 96bit IV is the IV we can do fast in hardware.
+    // Generic IV requires GHASH.
+
+    // The spec says we start from IV || 31x 0 with 1
+    unsigned int last = id + 1;
+
+    uchar4* last_uchar4 = (uchar4*)&last;
+    // flip it because of endianess
+    iv->sc = last_uchar4->s3;
+    iv->sd = last_uchar4->s2;
+    iv->se = last_uchar4->s1;
+    iv->sf = last_uchar4->s0;
+}
+
+__kernel void AES_GCM_Encrypt(
+    __global __read_only uchar16* restrict plainText, __constant uchar16* restrict expandedKey, const uchar16 iv,
+    __global __write_only uchar16* restrict cipherText,
+    const unsigned int rounds,
+    __local uchar16* restrict cache)
+{
+    const int global_id = get_global_id(0);
+    const int group_id = get_group_id(0);
+    const int local_id = get_local_id(0);
+    const int local_size = get_local_size(0);
+
+    event_t cacheEvent;
+    cacheEvent = async_work_group_copy(
+        cache,
+        plainText + (group_id * local_size),
+        local_size,
+        cacheEvent
+    );
+    wait_group_events(1, &cacheEvent);
+
+    uchar16 state = iv;
+    // the first IV is used for auth tag only, we use the second IV to get ciphertext
+    AES_GCM_IncrementIV(&state, global_id + 1);
+    state = AES_AddRoundKey(state, expandedKey[0]);
+
+    for (int i = 1; i < rounds - 1; ++i)
+    {
+        state = AES_SubBytes(state);
+        state = AES_ShiftRows(state);
+        state = AES_MixColumns(state);
+        state = AES_AddRoundKey(state, expandedKey[i]);
+    }
+
+    state = AES_SubBytes(state);
+    state = AES_ShiftRows(state);
+    cache[local_id] = cache[local_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    cacheEvent = async_work_group_copy(
+        cipherText + (group_id * local_size),
+        cache,
+        local_size,
+        cacheEvent
+    );
+}
