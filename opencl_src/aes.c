@@ -403,14 +403,7 @@ void AES_CTR_IncrementIC(uchar16* ic, unsigned int id)
 
     uchar8* last_uchar8 = (uchar8*)&last;
     // and then flip it back :-/
-    ic->s8 = last_uchar8->s7;
-    ic->s9 = last_uchar8->s6;
-    ic->sa = last_uchar8->s5;
-    ic->sb = last_uchar8->s4;
-    ic->sc = last_uchar8->s3;
-    ic->sd = last_uchar8->s2;
-    ic->se = last_uchar8->s1;
-    ic->sf = last_uchar8->s0;
+    ic->s89abcdef = last_uchar8->s76543210;
 }
 
 __kernel void AES_CTR_Encrypt(
@@ -469,10 +462,7 @@ void AES_GCM_IncrementIV(uchar16* iv, unsigned int id)
 
     uchar4* last_uchar4 = (uchar4*)&last;
     // flip it because of endianess
-    iv->sc = last_uchar4->s3;
-    iv->sd = last_uchar4->s2;
-    iv->se = last_uchar4->s1;
-    iv->sf = last_uchar4->s0;
+    iv->scdef = last_uchar4->s3210;
 }
 
 __kernel void AES_GCM_Encrypt(
