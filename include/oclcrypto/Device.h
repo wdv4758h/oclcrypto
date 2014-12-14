@@ -35,6 +35,12 @@
 namespace oclcrypto
 {
 
+enum Endianess
+{
+    E_LITTLE_ENDIAN = 0,
+    E_BIG_ENDIAN
+};
+
 /**
  * @brief Represents one OpenCL device with a distinct cl_device_id
  */
@@ -45,6 +51,8 @@ class OCLCRYPTO_EXPORT Device
         ~Device();
 
         std::string getName() const;
+
+        Endianess getEndianess() const;
 
         Program& createProgram(const std::string& source);
         void destroyProgram(Program& program);

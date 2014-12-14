@@ -61,6 +61,22 @@ const char* opencl_sample_code =
 
 BOOST_FIXTURE_TEST_SUITE(RawOpenCL, RawOpenCLFixture)
 
+BOOST_AUTO_TEST_CASE(DeviceProperties)
+{
+    BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
+
+    for (size_t i = 0; i < system.getDeviceCount(); ++i)
+    {
+        oclcrypto::Device& device = system.getDevice(i);
+
+        // we aren't really testing much here, just that we get no OpenCL errors
+        // there is no good point of truth to test against
+
+        device.getName();
+        device.getEndianess();
+    }
+}
+
 BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
 {
     BOOST_REQUIRE_GT(system.getDeviceCount(), 0);

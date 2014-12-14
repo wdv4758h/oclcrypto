@@ -91,6 +91,13 @@ std::string Device::getName() const
     return std::string(buffer, retSize);
 }
 
+Endianess Device::getEndianess() const
+{
+    cl_bool ret = CL_FALSE;
+    CLErrorGuard(clGetDeviceInfo(mCLDeviceID, CL_DEVICE_ENDIAN_LITTLE, sizeof(ret), &ret, nullptr));
+    return ret == CL_TRUE ? E_LITTLE_ENDIAN : E_BIG_ENDIAN;
+}
+
 Program& Device::createProgram(const std::string& source)
 {
     Program* ret = new Program(*this, source);
