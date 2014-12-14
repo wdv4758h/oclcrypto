@@ -52,8 +52,9 @@ Program::Program(Device& device, const std::string& source):
     }
 
     const cl_device_id deviceId = device.getCLDeviceID();
-    const char* options = "-cl-strict-aliasing";
-    const cl_int err = clBuildProgram(mCLProgram, 1, &deviceId, options, nullptr, nullptr);
+    std::string options = std::string("-cl-strict-aliasing ") +
+        (mDevice.getEndianess() == E_LITTLE_ENDIAN ? "-D LITTLE_ENDIAN" : "-D BIG_ENDIAN");
+    const cl_int err = clBuildProgram(mCLProgram, 1, &deviceId, options.c_str(), nullptr, nullptr);
 
     if (err != CL_SUCCESS)
     {

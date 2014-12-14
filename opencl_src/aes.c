@@ -397,6 +397,7 @@ void AES_CTR_IncrementIC(uchar16* ic, unsigned int id)
     // TODO: This will not carry over the last half!
     //       We need some sort of a uint4_add function.
 
+#ifdef LITTLE_ENDIAN
     // because of endianess we need to flip
     unsigned long last = (unsigned long)ic->sfedcba98;
     last += id;
@@ -404,6 +405,10 @@ void AES_CTR_IncrementIC(uchar16* ic, unsigned int id)
     uchar8* last_uchar8 = (uchar8*)&last;
     // and then flip it back :-/
     ic->s89abcdef = last_uchar8->s76543210;
+#else
+    unsigned long* last = (unsigned long*)((uchar8*)ic)[1];
+    *last += id;
+#endif
 }
 
 __kernel void AES_CTR_Encrypt(
