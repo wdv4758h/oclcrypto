@@ -50,9 +50,9 @@ class OCLCRYPTO_EXPORT CLError : public std::runtime_error
 };
 
 #ifdef NDEBUG
-#    define CLErrorGuard(call) _CLErrorGuard((call), nullptr, 0, nullptr)
+#    define CLErrorGuard(call) ::oclcrypto::_CLErrorGuard((call), nullptr, 0, nullptr)
 #else
-#    define CLErrorGuard(call) _CLErrorGuard((call), __FILE__, __LINE__, "")
+#    define CLErrorGuard(call) ::oclcrypto::_CLErrorGuard((call), __FILE__, __LINE__, "")
 #endif
 
 inline void _CLErrorGuard(cl_int returnCode, const char* file, const unsigned int line, const char* func)
