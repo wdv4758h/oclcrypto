@@ -23,11 +23,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+void OpenCL_DataBuffer_Benchmarks();
 void AES_ECB_Benchmarks();
 void AES_CTR_Benchmarks();
 
 int main(int argc, char** argv)
 {
+    OpenCL_DataBuffer_Benchmarks();
     AES_ECB_Benchmarks();
     AES_CTR_Benchmarks();
 }
