@@ -31,8 +31,7 @@
 #include <boost/timer/timer.hpp>
 
 #include "DataGenerator.h"
-
-#include <iostream>
+#include "ResultsAggregator.h"
 
 boost::timer::cpu_times time_OpenCL_DataBuffer_ToDevice(
     oclcrypto::System& system, oclcrypto::Device& device,
@@ -90,7 +89,7 @@ boost::timer::cpu_times time_OpenCL_DataBuffer_FromDevice(
     return timer.elapsed();
 }
 
-void benchmark_OpenCL_DataBuffer(oclcrypto::System& system, size_t bufferSize)
+void benchmark_OpenCL_DataBuffer(oclcrypto::System& system, size_t bufferSize, ResultsAggregator& results)
 {
     const unsigned int iterations = 20;
 
@@ -100,10 +99,7 @@ void benchmark_OpenCL_DataBuffer(oclcrypto::System& system, size_t bufferSize)
     {
         oclcrypto::Device& device = system.getDevice(i);
         const boost::timer::cpu_times times = time_OpenCL_DataBuffer_ToDevice(system, device, bufferSize, iterations);
-        const size_t totalBytes = iterations * bufferSize;
-        const double bytesPerSecond = (double)totalBytes / times.wall * 1000 * 1000 * 1000;
-
-        std::cout << " - " << (bytesPerSecond * 0.001) << " KB/sec on " << device.getName() << std::endl;
+        results.addResult("OpenCL DataBuffer transfer to device " + device.getName(), bufferSize, (times.wall * 0.001 * 0.001 * 0.001) / (double)iterations);
     }
 
     std::cout << "OpenCL DataBuffer "  + std::to_string(bufferSize) + "-byte transfer from device" << std::endl;
@@ -112,22 +108,17 @@ void benchmark_OpenCL_DataBuffer(oclcrypto::System& system, size_t bufferSize)
     {
         oclcrypto::Device& device = system.getDevice(i);
         const boost::timer::cpu_times times = time_OpenCL_DataBuffer_FromDevice(system, device, bufferSize, iterations);
-        const size_t totalBytes = iterations * bufferSize;
-        const double bytesPerSecond = (double)totalBytes / times.wall * 1000 * 1000 * 1000;
-
-        std::cout << " - " << (bytesPerSecond * 0.001) << " KB/sec on " << device.getName() << std::endl;
+        results.addResult("OpenCL DataBuffer transfer from device " + device.getName(), bufferSize, (times.wall * 0.001 * 0.001 * 0.001) / (double)iterations);
     }
 }
 
-void OpenCL_DataBuffer_Benchmarks()
+void OpenCL_DataBuffer_Benchmarks(ResultsAggregator& results)
 {
     oclcrypto::System system(true);
 
     for (unsigned short bufferSizeMul = 1; bufferSizeMul <= 128; bufferSizeMul *= 4)
     {
         const size_t bufferSize = 16 * 4096 * bufferSizeMul;
-
-        benchmark_OpenCL_DataBuffer(system, bufferSize);
-        std::cout << std::endl;
+        benchmark_OpenCL_DataBuffer(system, bufferSize, results);
     }
 }

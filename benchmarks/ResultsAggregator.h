@@ -23,19 +23,21 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "ResultsAggregator.h"
+#include <map>
+#include <memory>
 
-void OpenCL_DataBuffer_Benchmarks(ResultsAggregator& results);
-void AES_ECB_Benchmarks(ResultsAggregator& results);
-void AES_CTR_Benchmarks(ResultsAggregator& results);
-
-int main(int argc, char** argv)
+class ResultsAggregator
 {
-    ResultsAggregator results;
+    public:
+        ResultsAggregator();
+        ~ResultsAggregator();
 
-    OpenCL_DataBuffer_Benchmarks(results);
-    AES_ECB_Benchmarks(results);
-    AES_CTR_Benchmarks(results);
+        void addResult(const std::string& task, size_t problemSize, double totalTime);
+        void print();
 
-    results.print();
-}
+    private:
+        typedef std::map<size_t, double> TaskResults;
+        typedef std::map<std::string, TaskResults> TaskResultsMap;
+
+        TaskResultsMap mResults;
+};

@@ -31,6 +31,7 @@
 #include <boost/timer/timer.hpp>
 
 #include "DataGenerator.h"
+#include "ResultsAggregator.h"
 
 #include <iostream>
 
@@ -55,7 +56,7 @@ boost::timer::cpu_times time_AES_ECB(
     return timer.elapsed();
 }
 
-void benchmark_AES_ECB(oclcrypto::System& system, size_t keySize, size_t plaintextSize)
+void benchmark_AES_ECB(oclcrypto::System& system, size_t keySize, size_t plaintextSize, ResultsAggregator& results)
 {
     const unsigned int iterations = 100;
 
@@ -65,14 +66,11 @@ void benchmark_AES_ECB(oclcrypto::System& system, size_t keySize, size_t plainte
     {
         oclcrypto::Device& device = system.getDevice(i);
         const boost::timer::cpu_times times = time_AES_ECB(system, device, keySize, plaintextSize, iterations);
-        const size_t totalBytes = iterations * plaintextSize;
-        const double bytesPerSecond = (double)totalBytes / times.wall * 1000 * 1000 * 1000;
-
-        std::cout << " - " << (bytesPerSecond * 0.001) << " KB/sec on " << device.getName() << std::endl;
+        results.addResult("AES ECB " + std::to_string(keySize * 8) + "bit on " + device.getName(), plaintextSize, (times.wall * 0.001 * 0.001 * 0.001) / (double)iterations);
     }
 }
 
-void AES_ECB_Benchmarks()
+void AES_ECB_Benchmarks(ResultsAggregator& results)
 {
     oclcrypto::System system(true);
 
@@ -83,9 +81,7 @@ void AES_ECB_Benchmarks()
         for (unsigned short plaintextMul = 1; plaintextMul <= 128; plaintextMul *= 4)
         {
             const size_t plaintextSize = 4096 * plaintextMul;
-
-            benchmark_AES_ECB(system, keySize, plaintextSize);
-            std::cout << std::endl;
+            benchmark_AES_ECB(system, keySize, plaintextSize, results);
         }
     }
 }
