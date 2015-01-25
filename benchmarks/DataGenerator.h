@@ -26,4 +26,10 @@
 #include <vector>
 #include <memory>
 
+/**
+ * @brief generateRandomVector
+ *
+ * @param size Number of elements that should be generated
+ * @return The vector containing "size" random elements
+ */
 std::vector<unsigned char> generateRandomVector(size_t size);

@@ -26,7 +26,7 @@
 #include "DataGenerator.h"
 #include <stdio.h>
 
-static unsigned char generateRandomChar()
+static inline unsigned char generateRandomChar()
 {
     return (unsigned char)(rand() % 255);
 }
@@ -36,9 +36,7 @@ std::vector<unsigned char> generateRandomVector(size_t size)
     std::vector<unsigned char> ret(size);
 
     for (size_t i = 0; i < size; ++i)
-    {
         ret[i] = generateRandomChar();
-    }
 
     return ret;
 }
