@@ -125,8 +125,10 @@ class DataBufferReadLock
 
         inline const T& operator[](const size_t idx) const
         {
-            /*if (idx >= size())
-                throw std::out_of_range("Index out of bounds");*/
+#ifndef NDEBUG
+            if (idx >= size())
+                throw std::out_of_range("Index out of bounds");
+#endif
 
             return mData[idx];
         }
@@ -170,16 +172,20 @@ class DataBufferWriteLock
 
         inline T& operator[](const size_t idx)
         {
-            /*if (idx >= mBuffer.getArraySize<T>())
-                throw std::out_of_range("Index out of bounds");*/
+#ifndef NDEBUG
+            if (idx >= mBuffer.getArraySize<T>())
+                throw std::out_of_range("Index out of bounds");
+#endif
 
             return mData[idx];
         }
 
         inline const T& operator[](const size_t idx) const
         {
-            /*if (idx >= mBuffer.getArraySize<T>())
-                throw std::out_of_range("Index out of bounds");*/
+#ifndef NDEBUG
+            if (idx >= mBuffer.getArraySize<T>())
+                throw std::out_of_range("Index out of bounds");
+#endif
 
             return mData[idx];
         }
