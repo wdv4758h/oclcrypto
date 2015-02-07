@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
         }
     }
 }
-/*
+
 BOOST_AUTO_TEST_CASE(DataBuffers)
 {
     BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
@@ -146,34 +146,16 @@ BOOST_AUTO_TEST_CASE(DataBuffers)
         oclcrypto::DataBuffer& output = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Write);
         BOOST_CHECK_EQUAL(output.getSize(), 16 * sizeof(int));
         BOOST_CHECK_EQUAL(output.getArraySize<int>(), 16);
-        BOOST_CHECK_EQUAL(output.getLockState(), oclcrypto::DataBuffer::Unlocked);
 
         {
             auto data = output.lockWrite<int>();
             for (int j = 0; j < 16; ++j)
                 data[j] = j;
-
-            // out of bounds should throw
-            BOOST_CHECK_THROW(data[16] = 123, std::out_of_range);
-
-            BOOST_CHECK_EQUAL(output.getLockState(), oclcrypto::DataBuffer::WriteLocked);
-            data.flush();
-            BOOST_CHECK_EQUAL(output.getLockState(), oclcrypto::DataBuffer::Unlocked);
-            // second flush should throw
-            BOOST_CHECK_THROW(data.flush(), std::runtime_error);
         }
         {
             auto data = output.lockRead<int>();
             for (int j = 0; j < 16; ++j)
                 BOOST_CHECK_EQUAL(data[j], j);
-
-            BOOST_CHECK_THROW(data[17] == 17, std::out_of_range);
-
-            BOOST_CHECK_EQUAL(output.getLockState(), oclcrypto::DataBuffer::ReadLocked);
-            data.unlock();
-            BOOST_CHECK_EQUAL(output.getLockState(), oclcrypto::DataBuffer::Unlocked);
-            // second unlock should throw
-            BOOST_CHECK_THROW(data.unlock(), std::runtime_error);
         }
 
         oclcrypto::DataBuffer& input = device.allocateBuffer<int>(16, oclcrypto::DataBuffer::Read);
@@ -181,28 +163,9 @@ BOOST_AUTO_TEST_CASE(DataBuffers)
             auto data = input.lockWrite<int>();
             for (int j = 0; j < 16; ++j)
                 data[j] = j;
-
-            // it will get flushed automatically when going of of scope
-            BOOST_CHECK_EQUAL(input.getLockState(), oclcrypto::DataBuffer::WriteLocked);
-        }
-        BOOST_CHECK_EQUAL(input.getLockState(), oclcrypto::DataBuffer::Unlocked);
-
-        // the following write gets discarded
-        {
-            auto data = input.lockWrite<int>();
-            for (int j = 0; j < 16; ++j)
-                data[j] = j * 10;
-
-            BOOST_CHECK_EQUAL(input.getLockState(), oclcrypto::DataBuffer::WriteLocked);
-            data.discard();
-            // second discard should throw
-            BOOST_CHECK_THROW(data.discard(), std::runtime_error);
-            BOOST_CHECK_EQUAL(input.getLockState(), oclcrypto::DataBuffer::Unlocked);
-            // flushing after discard should throw
-            BOOST_CHECK_THROW(data.flush(), std::runtime_error);
         }
     }
-}*/
+}
 
 BOOST_AUTO_TEST_CASE(KernelExecutionSetToConstant)
 {
