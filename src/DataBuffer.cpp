@@ -33,9 +33,7 @@ namespace oclcrypto
 DataBuffer::DataBuffer(Device& device, const size_t size, const unsigned short memFlags):
     mDevice(device),
     mSize(size),
-    mMemFlags(memFlags),
-
-    mLockState(Unlocked)
+    mMemFlags(memFlags)
 {
     cl_mem_flags clMemFlags = 0;
     switch (memFlags)
@@ -54,6 +52,8 @@ DataBuffer::DataBuffer(Device& device, const size_t size, const unsigned short m
             throw std::invalid_argument("Invalid memory flags passed.");
             break;
     }
+
+    clMemFlags |= CL_MEM_ALLOC_HOST_PTR;
 
     cl_int err;
     mCLMem = clCreateBuffer(device.getCLContext(), clMemFlags, size, nullptr, &err);
@@ -87,39 +87,30 @@ const cl_mem* DataBuffer::getCLMemPtr() const
     return &mCLMem;
 }
 
-DataBuffer::LockState DataBuffer::getLockState() const
+void* DataBuffer::mapForReading()
 {
-    return mLockState;
+    cl_int err;
+    void* ret = clEnqueueMapBuffer(mDevice.getCLQueue(), mCLMem, CL_TRUE, CL_MAP_READ, 0, getSize(), 0, nullptr, nullptr, &err);
+    CLErrorGuard(err);
+    return ret;
 }
 
-void DataBuffer::lockAndReadRawData(void* data)
+void DataBuffer::unmapForReading(void* buffer)
 {
-    if (mLockState != Unlocked)
-        throw std::runtime_error("This DataBuffer is already locked!");
-
-    mLockState = ReadLocked;
-    CLErrorGuard(clEnqueueReadBuffer(mDevice.getCLQueue(), mCLMem, CL_TRUE, 0, mSize, data, 0, nullptr, nullptr));
+    CLErrorGuard(clEnqueueUnmapMemObject(mDevice.getCLQueue(), mCLMem, buffer, 0, nullptr, nullptr));
 }
 
-void DataBuffer::unlockAndWriteRawData(void* data, LockState expectedLockState)
+void* DataBuffer::mapForWriting()
 {
-    if (mLockState != expectedLockState)
-        throw std::runtime_error("Lock states don't match!");
-
-    // OpenCL API is responsible for freeing the data buffer
-    CLErrorGuard(clEnqueueWriteBuffer(mDevice.getCLQueue(), mCLMem, CL_FALSE, 0, mSize, data, 0, nullptr, nullptr));
-    // TODO: workaround for pocl, the following clFinish should not be required!
-    CLErrorGuard(clFinish(mDevice.getCLQueue()));
-
-    mLockState = Unlocked;
+    cl_int err;
+    void* ret = clEnqueueMapBuffer(mDevice.getCLQueue(), mCLMem, CL_TRUE, CL_MAP_WRITE, 0, getSize(), 0, nullptr, nullptr, &err);
+    CLErrorGuard(err);
+    return ret;
 }
 
-void DataBuffer::discardLock(LockState expectedLockState)
+void DataBuffer::unmapForWriting(void* buffer)
 {
-    if (mLockState != expectedLockState)
-        throw std::runtime_error("Lock states don't match!");
-
-    mLockState = Unlocked;
+    CLErrorGuard(clEnqueueUnmapMemObject(mDevice.getCLQueue(), mCLMem, buffer, 0, nullptr, nullptr));
 }
 
 }

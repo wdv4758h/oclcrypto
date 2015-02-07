@@ -46,14 +46,6 @@ class OCLCRYPTO_EXPORT DataBuffer
             ReadWrite = Read | Write
         };
 
-        enum LockState
-        {
-            Unlocked = 1 << 0,
-            ReadLocked = 1 << 1,
-            WriteLocked = 1 << 2,
-            ReadWriteLocked = ReadLocked | WriteLocked
-        };
-
         /**
          * @param size Size in bytes
          */
@@ -87,17 +79,16 @@ class OCLCRYPTO_EXPORT DataBuffer
             return size / elementSize;
         }
 
-        LockState getLockState() const;
+        void* mapForReading();
+        void unmapForReading(void* buffer);
+        void* mapForWriting();
+        void unmapForWriting(void* buffer);
 
         template<typename T>
         DataBufferReadLock<T> lockRead();
 
         template<typename T>
         DataBufferWriteLock<T> lockWrite();
-
-        void lockAndReadRawData(void *data);
-        void unlockAndWriteRawData(void* data, LockState expectedLockState);
-        void discardLock(LockState expectedLockState);
 
         // noncopyable
         DataBuffer(const DataBuffer&) = delete;
@@ -108,8 +99,6 @@ class OCLCRYPTO_EXPORT DataBuffer
         const size_t mSize;
         const unsigned short mMemFlags;
 
-        LockState mLockState;
-
         cl_mem mCLMem;
 };
 
@@ -117,15 +106,16 @@ template<typename T>
 class DataBufferReadLock
 {
     public:
-        inline DataBufferReadLock(DataBuffer& buffer, T* data):
+        inline DataBufferReadLock(DataBuffer& buffer):
             mBuffer(buffer),
-            mData(data)
-        {}
+            mData(nullptr)
+        {
+            mData = reinterpret_cast<T*>(mBuffer.mapForReading());
+        }
 
         inline ~DataBufferReadLock()
         {
-            if (mData)
-                unlock();
+            mBuffer.unmapForReading(mData);
         }
 
         inline size_t size() const
@@ -135,26 +125,10 @@ class DataBufferReadLock
 
         inline const T& operator[](const size_t idx) const
         {
-            if (!mData)
-                throw std::runtime_error("This read lock has already been unlocked!");
-
-            if (idx >= size())
-                throw std::out_of_range("Index out of bounds");
+            /*if (idx >= size())
+                throw std::out_of_range("Index out of bounds");*/
 
             return mData[idx];
-        }
-
-        inline void unlock()
-        {
-            if (!mData)
-                throw std::runtime_error(
-                    "This DataBufferReadLock has already been unlocked, "
-                    "you can't unlock it twice!"
-                );
-
-            mBuffer.discardLock(DataBuffer::ReadLocked);
-            delete [] mData;
-            mData = nullptr;
         }
 
         // noncopyable
@@ -175,75 +149,46 @@ class DataBufferReadLock
 template<typename T>
 DataBufferReadLock<T> DataBuffer::lockRead()
 {
-    T* data = new T[getArraySize<T>()];
-    lockAndReadRawData(data);
-    return DataBufferReadLock<T>(*this, data);
+    return DataBufferReadLock<T>(*this);
 }
 
 template<typename T>
 class DataBufferWriteLock
 {
     public:
-        inline DataBufferWriteLock(DataBuffer& buffer, T* data):
+        inline DataBufferWriteLock(DataBuffer& buffer):
             mBuffer(buffer),
-            mData(data),
-            mFlushed(false)
-        {}
+            mData(nullptr)
+        {
+            mData = reinterpret_cast<T*>(mBuffer.mapForWriting());
+        }
 
         inline ~DataBufferWriteLock()
         {
-            if (!mFlushed)
-                flush();
-
-            delete [] mData;
+            mBuffer.unmapForWriting(mData);
         }
 
         inline T& operator[](const size_t idx)
         {
-            if (idx >= mBuffer.getArraySize<T>())
-                throw std::out_of_range("Index out of bounds");
+            /*if (idx >= mBuffer.getArraySize<T>())
+                throw std::out_of_range("Index out of bounds");*/
 
             return mData[idx];
         }
 
         inline const T& operator[](const size_t idx) const
         {
-            if (idx >= mBuffer.getArraySize<T>())
-                throw std::out_of_range("Index out of bounds");
+            /*if (idx >= mBuffer.getArraySize<T>())
+                throw std::out_of_range("Index out of bounds");*/
 
             return mData[idx];
-        }
-
-        inline void flush()
-        {
-            if (mFlushed)
-                throw std::runtime_error(
-                    "This DataBufferWriteLock has already been flushed, "
-                    "you can't flush it twice!"
-                );
-
-            mBuffer.unlockAndWriteRawData(mData, DataBuffer::WriteLocked);
-            mFlushed = true;
-        }
-
-        inline void discard()
-        {
-            if (mFlushed)
-                throw std::runtime_error(
-                    "This DataBufferWriteLock has already been flushed or discarded, "
-                    "you can't discard it any more!"
-                );
-
-            mBuffer.discardLock(DataBuffer::WriteLocked);
-            mFlushed = true;
         }
 
         // noncopyable
         // but move constructible!
         DataBufferWriteLock(DataBufferWriteLock&& other):
             mBuffer(other.mBuffer),
-            mData(other.mData),
-            mFlushed(other.mFlushed)
+            mData(other.mData)
         {}
 
         DataBufferWriteLock(const DataBufferWriteLock&) = delete;
@@ -252,19 +197,12 @@ class DataBufferWriteLock
     private:
         DataBuffer& mBuffer;
         T* mData;
-        bool mFlushed;
 };
 
 template<typename T>
 DataBufferWriteLock<T> DataBuffer::lockWrite()
 {
-    if (mLockState != Unlocked)
-        throw std::runtime_error("This DataBuffer has already been locked!");
-
-    mLockState = WriteLocked;
-
-    T* data = new T[getArraySize<T>()];
-    return DataBufferWriteLock<T>(*this, data);
+    return DataBufferWriteLock<T>(*this);
 }
 
 }

@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(SimpleProgramCompilation)
         }
     }
 }
-
+/*
 BOOST_AUTO_TEST_CASE(DataBuffers)
 {
     BOOST_REQUIRE_GT(system.getDeviceCount(), 0);
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(DataBuffers)
             BOOST_CHECK_THROW(data.flush(), std::runtime_error);
         }
     }
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(KernelExecutionSetToConstant)
 {
