@@ -119,21 +119,6 @@ void Device::destroyProgram(Program& program)
     delete &program;
 }
 
-cl_device_id Device::getCLDeviceID() const
-{
-    return mCLDeviceID;
-}
-
-cl_context Device::getCLContext() const
-{
-    return mCLContext;
-}
-
-cl_command_queue Device::getCLQueue() const
-{
-    return mCLQueue;
-}
-
 DataBuffer& Device::allocateBufferRaw(const size_t size, const unsigned short memFlags)
 {
     DataBuffer* ret = new DataBuffer(*this, size, memFlags);

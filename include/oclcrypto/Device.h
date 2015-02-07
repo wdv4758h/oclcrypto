@@ -57,9 +57,20 @@ class OCLCRYPTO_EXPORT Device
         Program& createProgram(const std::string& source);
         void destroyProgram(Program& program);
 
-        cl_device_id getCLDeviceID() const;
-        cl_context getCLContext() const;
-        cl_command_queue getCLQueue() const;
+        inline cl_device_id getCLDeviceID() const
+        {
+            return mCLDeviceID;
+        }
+
+        inline cl_context getCLContext() const
+        {
+            return mCLContext;
+        }
+
+        inline cl_command_queue getCLQueue() const
+        {
+            return mCLQueue;
+        }
 
         DataBuffer& allocateBufferRaw(const size_t size, const unsigned short memFlags = DataBuffer::ReadWrite);
 
