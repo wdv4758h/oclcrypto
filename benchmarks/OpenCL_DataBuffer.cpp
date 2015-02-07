@@ -116,7 +116,7 @@ void OpenCL_DataBuffer_Benchmarks(ResultsAggregator& results)
 {
     oclcrypto::System system(true);
 
-    for (unsigned short bufferSizeMul = 1; bufferSizeMul <= 128; bufferSizeMul *= 4)
+    for (unsigned short bufferSizeMul = 1; bufferSizeMul <= 512; bufferSizeMul *= 8)
     {
         const size_t bufferSize = 16 * 4096 * bufferSizeMul;
         benchmark_OpenCL_DataBuffer(system, bufferSize, results);
