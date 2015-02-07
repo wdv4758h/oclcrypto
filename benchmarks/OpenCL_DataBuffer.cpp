@@ -70,7 +70,7 @@ boost::timer::cpu_times time_OpenCL_DataBuffer_FromDevice(
             lock[i] = buffer[i];
     }
 
-    unsigned char readBuffer[bufferSize];
+    std::vector<unsigned char> readBuffer(bufferSize);
 
     boost::timer::cpu_timer timer;
 
