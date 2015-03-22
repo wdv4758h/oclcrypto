@@ -78,6 +78,13 @@ class OCLCRYPTO_EXPORT System
         Device& getDevice(size_t idx);
 
         /**
+         * @brief Gets the best available device, prefers GPU over CPU
+         *
+         * @todo This just returns the first found device right now!
+         */
+        Device& getBestDevice();
+
+        /**
          * @brief Retrieves given program type for given device from cache or create it
          *
          * @param device Which device will we run our desired program on

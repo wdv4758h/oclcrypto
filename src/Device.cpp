@@ -146,4 +146,10 @@ unsigned int Device::getCapacity() const
     return 3;
 }
 
+unsigned int Device::suggestLocalWorkSize() const
+{
+    // TODO: This is completely arbitrary for now
+    return 1;
+}
+
 }

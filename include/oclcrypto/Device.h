@@ -84,6 +84,8 @@ class OCLCRYPTO_EXPORT Device
 
         unsigned int getCapacity() const;
 
+        unsigned int suggestLocalWorkSize() const;
+
         // noncopyable
         Device(const Device&) = delete;
         Device& operator=(const Device&) = delete;

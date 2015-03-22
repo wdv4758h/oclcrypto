@@ -71,6 +71,8 @@ target_link_libraries("oclcrypto" ${LIBOCLCRYPTO_LINK_LIBRARIES})
 #install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/liboclcrypto"
 #    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
+add_subdirectory(cli)
+
 enable_testing()
 add_subdirectory(tests)
 

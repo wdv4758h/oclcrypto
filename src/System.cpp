@@ -75,6 +75,14 @@ Device& System::getDevice(size_t idx)
     return *(it->second);
 }
 
+Device& System::getBestDevice()
+{
+    if (getDeviceCount() == 0)
+        throw std::invalid_argument("No OpenCL devices found. Can't return the best device from an empty set.");
+
+    return getDevice(0);
+}
+
 Program& System::getProgramFromCache(Device& device, ProgramSources::ProgramType type)
 {
     DeviceProgramCacheMap::iterator it = mDeviceProgramCacheMap.find(&device);
