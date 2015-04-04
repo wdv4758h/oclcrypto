@@ -37,6 +37,7 @@ class OCLCRYPTO_EXPORT ProgramSources
         enum ProgramType
         {
             AES = 0,
+            BLOWFISH = 1,
 
             PROGRAM_COUNT
         };

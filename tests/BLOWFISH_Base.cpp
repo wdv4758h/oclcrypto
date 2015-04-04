@@ -23,17 +23,41 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "oclcrypto/ProgramSources.h"
-#include "InbuiltProgramSources.inc"
+#include <oclcrypto/BLOWFISH_Base.h>
 
-namespace oclcrypto
+#include <boost/test/unit_test.hpp>
+
+BOOST_AUTO_TEST_SUITE(BLOWFISH_Base)
+/*
+BOOST_AUTO_TEST_CASE(KeySchedule)
 {
+    {
+        const unsigned char key[] =
+        {
+            // max key size is 448 bits, that's 7*8*8
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        };
 
-const char* ProgramSources::msSources[] =
-{
-    aes, // AES
-    blowfish, // BLOWFISH
-    nullptr
-};
+        const uint32_t expected_p[] =
+        {
+            // ??
+        };
 
-}
+        uint32_t p[18];
+        uint32_t sboxes[4*256];
+        oclcrypto::BLOWFISH_Base::generatePAndSBoxes(key, 7*8*8, p, sboxes);
+
+        for (size_t i = 0; i < 18; ++i)
+        {
+            BOOST_CHECK_EQUAL(expected_p[i], p[i]);
+        }
+    }
+}*/
+
+BOOST_AUTO_TEST_SUITE_END()
