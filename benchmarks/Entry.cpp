@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Martin Preisler <martin@preisler.me>
+ * Copyright (C) 2015 Martin Preisler <martin@preisler.me>
  *
  * This file is part of oclcrypto.
  *
@@ -28,6 +28,7 @@
 void OpenCL_DataBuffer_Benchmarks(ResultsAggregator& results);
 void AES_ECB_Benchmarks(ResultsAggregator& results);
 void AES_CTR_Benchmarks(ResultsAggregator& results);
+void BLOWFISH_ECB_Benchmarks(ResultsAggregator& results);
 
 int main(int argc, char** argv)
 {
@@ -36,6 +37,7 @@ int main(int argc, char** argv)
     OpenCL_DataBuffer_Benchmarks(results);
     AES_ECB_Benchmarks(results);
     AES_CTR_Benchmarks(results);
+    BLOWFISH_ECB_Benchmarks(results);
 
     results.print();
 }
