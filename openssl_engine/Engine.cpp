@@ -41,10 +41,10 @@ static int oclcrypto_cipher_nids[] = {
     NID_aes_128_ecb,
     //NID_aes_128_ctr,
 
-    //NID_aes_192_ecb,
+    NID_aes_192_ecb,
     //NID_aes_192_ctr,
 
-    //NID_aes_256_ecb,
+    NID_aes_256_ecb,
     //NID_aes_256_ctr,
 };
 
@@ -150,6 +150,39 @@ static const EVP_CIPHER oclcrypto_aes_128_ecb =
     nullptr // app_data
 };
 
+static const EVP_CIPHER oclcrypto_aes_192_ecb =
+{
+    NID_aes_192_ecb, // nid
+    16, // block_size
+    24, // key_len
+    0, // iv_len
+    EVP_CIPH_ECB_MODE, // flags
+    oclcrypto_aes_ecb_init, // init
+    oclcrypto_aes_ecb_do_cipher, // do_cipher
+    oclcrypto_aes_ecb_cleanup, // cleanup
+    sizeof(void*) + 16, // ctx_size
+    EVP_CIPHER_set_asn1_iv, // set_asn1_parameters - unused?
+    EVP_CIPHER_get_asn1_iv, // get_asn1_parameters - unused?
+    nullptr, // control
+    nullptr // app_data
+};
+
+static const EVP_CIPHER oclcrypto_aes_256_ecb =
+{
+    NID_aes_256_ecb, // nid
+    16, // block_size
+    32, // key_len
+    0, // iv_len
+    EVP_CIPH_ECB_MODE, // flags
+    oclcrypto_aes_ecb_init, // init
+    oclcrypto_aes_ecb_do_cipher, // do_cipher
+    oclcrypto_aes_ecb_cleanup, // cleanup
+    sizeof(void*) + 16, // ctx_size
+    EVP_CIPHER_set_asn1_iv, // set_asn1_parameters - unused?
+    EVP_CIPHER_get_asn1_iv, // get_asn1_parameters - unused?
+    nullptr, // control
+    nullptr // app_data
+};
 
 static int oclcrypto_ciphers(ENGINE* e, const EVP_CIPHER** cipher, const int** nids, int nid)
 {
@@ -163,6 +196,12 @@ static int oclcrypto_ciphers(ENGINE* e, const EVP_CIPHER** cipher, const int** n
     {
         case NID_aes_128_ecb:
             *cipher = &oclcrypto_aes_128_ecb;
+            break;
+        case NID_aes_192_ecb:
+            *cipher = &oclcrypto_aes_192_ecb;
+            break;
+        case NID_aes_256_ecb:
+            *cipher = &oclcrypto_aes_256_ecb;
             break;
         default:
             *cipher = nullptr;
