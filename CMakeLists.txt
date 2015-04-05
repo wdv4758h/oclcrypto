@@ -19,6 +19,7 @@ include(GNUInstallDirs)
 
 find_package(OpenCL REQUIRED)
 find_package(Boost COMPONENTS system timer unit_test_framework)
+find_package(OpenSSL)
 
 # This is optional, only required if user wants to run cppcheck (unlikely)
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
@@ -72,6 +73,8 @@ target_link_libraries("oclcrypto" ${LIBOCLCRYPTO_LINK_LIBRARIES})
 #    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 add_subdirectory(cli)
+
+add_subdirectory(openssl_engine)
 
 enable_testing()
 add_subdirectory(tests)
