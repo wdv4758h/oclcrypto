@@ -311,20 +311,8 @@ __kernel void AES_ECB_Encrypt(
     __local uchar16* restrict cache)
 {
     const int global_id = get_global_id(0);
-    const int group_id = get_group_id(0);
-    const int local_id = get_local_id(0);
-    const int local_size = get_local_size(0);
 
-    event_t cacheEvent;
-    cacheEvent = async_work_group_copy(
-        cache,
-        plainText + (group_id * local_size),
-        local_size,
-        cacheEvent
-    );
-    wait_group_events(1, &cacheEvent);
-
-    uchar16 state = AES_AddRoundKey(cache[local_id], expandedKey[0]);
+    uchar16 state = AES_AddRoundKey(plainText[global_id], expandedKey[0]);
 
     for (int i = 1; i < rounds - 1; ++i)
     {
@@ -336,16 +324,8 @@ __kernel void AES_ECB_Encrypt(
 
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
-    cache[local_id] = AES_AddRoundKey(state, expandedKey[rounds - 1]);
 
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    cacheEvent = async_work_group_copy(
-        cipherText + (group_id * local_size),
-        cache,
-        local_size,
-        cacheEvent
-    );
+    cipherText[global_id] = AES_AddRoundKey(state, expandedKey[rounds - 1]);
 }
 
 __kernel void AES_ECB_Decrypt(
@@ -355,20 +335,9 @@ __kernel void AES_ECB_Decrypt(
     __local uchar16* restrict cache)
 {
     const int global_id = get_global_id(0);
-    const int group_id = get_group_id(0);
-    const int local_id = get_local_id(0);
-    const int local_size = get_local_size(0);
 
-    event_t cacheEvent;
-    cacheEvent = async_work_group_copy(
-        cache,
-        cipherText + (group_id * local_size),
-        local_size,
-        cacheEvent
-    );
-    wait_group_events(1, &cacheEvent);
+    uchar16 state = AES_AddRoundKey(cipherText[global_id], expandedKey[rounds - 1]);
 
-    uchar16 state = AES_AddRoundKey(cache[local_id], expandedKey[rounds - 1]);
     state = AES_InverseShiftRows(state);
     state = AES_InverseSubBytes(state);
 
@@ -380,16 +349,7 @@ __kernel void AES_ECB_Decrypt(
         state = AES_InverseSubBytes(state);
     }
 
-    cache[local_id] = AES_AddRoundKey(state, expandedKey[0]);
-
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    cacheEvent = async_work_group_copy(
-        plainText + (group_id * local_size),
-        cache,
-        local_size,
-        cacheEvent
-    );
+    plainText[global_id] = AES_AddRoundKey(state, expandedKey[0]);
 }
 
 void AES_CTR_IncrementIC(uchar16* ic, unsigned int id)
@@ -418,18 +378,6 @@ __kernel void AES_CTR_Encrypt(
     __local uchar16* restrict cache)
 {
     const int global_id = get_global_id(0);
-    const int group_id = get_group_id(0);
-    const int local_id = get_local_id(0);
-    const int local_size = get_local_size(0);
-
-    event_t cacheEvent;
-    cacheEvent = async_work_group_copy(
-        cache,
-        plainText + (group_id * local_size),
-        local_size,
-        cacheEvent
-    );
-    wait_group_events(1, &cacheEvent);
 
     uchar16 state = ic;
     AES_CTR_IncrementIC(&state, global_id);
@@ -445,16 +393,8 @@ __kernel void AES_CTR_Encrypt(
 
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
-    cache[local_id] = cache[local_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
 
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    cacheEvent = async_work_group_copy(
-        cipherText + (group_id * local_size),
-        cache,
-        local_size,
-        cacheEvent
-    );
+    cipherText[global_id] = plainText[local_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
 }
 
 void AES_GCM_IncrementIV(uchar16* iv, unsigned int id)
@@ -477,18 +417,6 @@ __kernel void AES_GCM_Encrypt(
     __local uchar16* restrict cache)
 {
     const int global_id = get_global_id(0);
-    const int group_id = get_group_id(0);
-    const int local_id = get_local_id(0);
-    const int local_size = get_local_size(0);
-
-    event_t cacheEvent;
-    cacheEvent = async_work_group_copy(
-        cache,
-        plainText + (group_id * local_size),
-        local_size,
-        cacheEvent
-    );
-    wait_group_events(1, &cacheEvent);
 
     uchar16 state = iv;
     // the first IV is used for auth tag only, we use the second IV to get ciphertext
@@ -505,14 +433,6 @@ __kernel void AES_GCM_Encrypt(
 
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
-    cache[local_id] = cache[local_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
 
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    cacheEvent = async_work_group_copy(
-        cipherText + (group_id * local_size),
-        cache,
-        local_size,
-        cacheEvent
-    );
+    cipherText[local_id] = plainText[local_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
 }
