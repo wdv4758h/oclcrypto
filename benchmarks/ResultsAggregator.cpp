@@ -25,6 +25,7 @@
 
 #include "ResultsAggregator.h"
 #include <iostream>
+#include <iomanip>
 
 ResultsAggregator::ResultsAggregator()
 {}
@@ -39,6 +40,7 @@ void ResultsAggregator::addResult(const std::string& task, size_t problemSize, d
 
 void ResultsAggregator::print()
 {
+    std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 2 );
     for (TaskResultsMap::const_iterator it = mResults.begin();
          it != mResults.end(); ++it)
     {
