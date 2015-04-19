@@ -394,7 +394,7 @@ __kernel void AES_CTR_Encrypt(
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
 
-    cipherText[global_id] = plainText[local_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
+    cipherText[global_id] = plainText[global_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
 }
 
 void AES_GCM_IncrementIV(uchar16* iv, unsigned int id)
@@ -434,5 +434,5 @@ __kernel void AES_GCM_Encrypt(
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
 
-    cipherText[local_id] = plainText[local_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
+    cipherText[global_id] = plainText[global_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
 }
