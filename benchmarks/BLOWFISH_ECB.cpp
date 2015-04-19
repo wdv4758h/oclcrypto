@@ -78,7 +78,7 @@ void BLOWFISH_ECB_Benchmarks(ResultsAggregator& results)
     {
         const size_t keySize = 16 + keyMul * 8;
 
-        for (unsigned short plaintextMul = 1; plaintextMul <= 128; plaintextMul *= 4)
+        for (unsigned short plaintextMul = 1; plaintextMul <= 2048; plaintextMul *= 4)
         {
             const size_t plaintextSize = 4096 * plaintextMul;
             benchmark_BLOWFISH_ECB(system, keySize, plaintextSize, results);
