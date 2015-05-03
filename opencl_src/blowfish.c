@@ -50,7 +50,7 @@ inline void BLOWFISH_WriteResultBlock(const unsigned long* block, __global __wri
 #endif
 }
 
-inline unsigned long BLOWFISH_f(unsigned int x, __global __read_only unsigned int* restrict sboxes)
+inline unsigned long BLOWFISH_f(unsigned int x, __local unsigned int* restrict sboxes)
 {
     const unsigned int d = (unsigned int)(x & 0x00ff);
     x >>= 8;
@@ -76,6 +76,25 @@ __kernel void BLOWFISH_ECB_Encrypt(
     __global __read_only unsigned int* restrict sboxes,
     __global __write_only unsigned long* restrict cipherText)
 {
+    __local unsigned int localP[18];
+    __local unsigned int localSboxes[4*256];
+
+    event_t cacheEvent;
+
+    cacheEvent = async_work_group_copy(
+        localP,
+        p,
+        18,
+        cacheEvent
+    );
+
+    cacheEvent = async_work_group_copy(
+        localSboxes,
+        sboxes,
+        4*256,
+        cacheEvent
+    );
+
     const int global_id = get_global_id(0);
     unsigned long block = plainText[global_id];
 
@@ -83,18 +102,20 @@ __kernel void BLOWFISH_ECB_Encrypt(
     unsigned int right;
     BLOWFISH_SplitBlock(&block, &left, &right);
 
-    left ^= p[0];
+    wait_group_events(1, &cacheEvent);
+
+    left ^= localP[0];
     // I had compiler error problems with pocl just porting the key schedule
     // code with swaps. That's why the i += 2 variant is used here, without
     // swaps. It's a little bit less readable but works on all the platforms.
     for (int i = 1; i < 16; i += 2)
     {
-        right ^= p[i];
-        right ^= BLOWFISH_f(left, sboxes);
-        left ^= p[i + 1];
-        left ^= BLOWFISH_f(right, sboxes);
+        right ^= localP[i];
+        right ^= BLOWFISH_f(left, localSboxes);
+        left ^= localP[i + 1];
+        left ^= BLOWFISH_f(right, localSboxes);
     }
-    right ^= p[16 + 1];
+    right ^= localP[16 + 1];
 
     // fuse the block back
     block = ((unsigned long)right) << 32 | left;
