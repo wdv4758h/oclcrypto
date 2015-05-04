@@ -125,7 +125,6 @@ void AES_CTR_Encrypt::execute(size_t localWorkSize)
     kernel->setParameter(2, &mIC);
     kernel->setParameter(3, *mCipherText);
     kernel->setParameter(4, &rounds);
-    kernel->allocateLocalParameter<cl_uchar16>(5, localWorkSize);
 
     kernel->execute(blockCount, localWorkSize, false);
 }

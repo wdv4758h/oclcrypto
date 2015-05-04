@@ -308,8 +308,7 @@ __kernel void AES_ECB_Encrypt(
     __global __read_only uchar16* restrict plainText,
     __global __read_only uchar16* restrict expandedKey,
     __global __write_only uchar16* restrict cipherText,
-    const unsigned int rounds,
-    __local uchar16* restrict cache)
+    const unsigned int rounds)
 {
     __local uchar16 localExpandedKey[15];
 
@@ -345,8 +344,7 @@ __kernel void AES_ECB_Decrypt(
     __global __read_only uchar16* restrict cipherText,
     __global __read_only uchar16* restrict expandedKey,
     __global __write_only uchar16* restrict plainText,
-    const unsigned int rounds,
-    __local uchar16* restrict cache)
+    const unsigned int rounds)
 {
     __local uchar16 localExpandedKey[15];
 
@@ -402,8 +400,7 @@ __kernel void AES_CTR_Encrypt(
     __global __read_only uchar16* restrict expandedKey,
     const uchar16 ic,
     __global __write_only uchar16* restrict cipherText,
-    const unsigned int rounds,
-    __local uchar16* restrict cache)
+    const unsigned int rounds)
 {
     __local uchar16 localExpandedKey[15];
 
@@ -454,8 +451,7 @@ __kernel void AES_GCM_Encrypt(
     __global __read_only uchar16* restrict expandedKey,
     const uchar16 iv,
     __global __write_only uchar16* restrict cipherText,
-    const unsigned int rounds,
-    __local uchar16* restrict cache)
+    const unsigned int rounds)
 {
     __local uchar16 localExpandedKey[15];
 
