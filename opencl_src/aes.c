@@ -293,7 +293,7 @@ inline uchar16 AES_InverseMixColumns(uchar16 state)
         AES_InverseMixColumn(state.sCDEF)
     );
 }
-
+/*
 inline void AES_DebugPrintBlock(uchar16 block)
 {
     // 16 bytes, 8 bytes per line
@@ -302,54 +302,80 @@ inline void AES_DebugPrintBlock(uchar16 block)
     printf("0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n",
            block.s8, block.s9, block.sa, block.sb, block.sc, block.sd, block.se, block.sf);
     printf("\n");
-}
+}*/
 
 __kernel void AES_ECB_Encrypt(
-    __global __read_only uchar16* restrict plainText, __constant uchar16* restrict expandedKey,
+    __global __read_only uchar16* restrict plainText,
+    __global __read_only uchar16* restrict expandedKey,
     __global __write_only uchar16* restrict cipherText,
     const unsigned int rounds,
     __local uchar16* restrict cache)
 {
-    const int global_id = get_global_id(0);
+    __local uchar16 localExpandedKey[15];
 
-    uchar16 state = AES_AddRoundKey(plainText[global_id], expandedKey[0]);
+    event_t cacheEvent;
+    cacheEvent = async_work_group_copy(
+        localExpandedKey,
+        expandedKey,
+        rounds,
+        cacheEvent
+    );
+
+    const int global_id = get_global_id(0);
+    uchar16 state = plainText[global_id];
+    wait_group_events(1, &cacheEvent);
+
+    state = AES_AddRoundKey(state, localExpandedKey[0]);
 
     for (int i = 1; i < rounds - 1; ++i)
     {
         state = AES_SubBytes(state);
         state = AES_ShiftRows(state);
         state = AES_MixColumns(state);
-        state = AES_AddRoundKey(state, expandedKey[i]);
+        state = AES_AddRoundKey(state, localExpandedKey[i]);
     }
 
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
 
-    cipherText[global_id] = AES_AddRoundKey(state, expandedKey[rounds - 1]);
+    cipherText[global_id] = AES_AddRoundKey(state, localExpandedKey[rounds - 1]);
 }
 
 __kernel void AES_ECB_Decrypt(
-    __global __read_only uchar16* restrict cipherText, __constant uchar16* restrict expandedKey,
+    __global __read_only uchar16* restrict cipherText,
+    __global __read_only uchar16* restrict expandedKey,
     __global __write_only uchar16* restrict plainText,
     const unsigned int rounds,
     __local uchar16* restrict cache)
 {
-    const int global_id = get_global_id(0);
+    __local uchar16 localExpandedKey[15];
 
-    uchar16 state = AES_AddRoundKey(cipherText[global_id], expandedKey[rounds - 1]);
+    event_t cacheEvent;
+    cacheEvent = async_work_group_copy(
+        localExpandedKey,
+        expandedKey,
+        rounds,
+        cacheEvent
+    );
+
+    const int global_id = get_global_id(0);
+    uchar16 state = cipherText[global_id];
+    wait_group_events(1, &cacheEvent);
+
+    state = AES_AddRoundKey(state, localExpandedKey[rounds - 1]);
 
     state = AES_InverseShiftRows(state);
     state = AES_InverseSubBytes(state);
 
     for (int i = rounds - 2; i >= 1; --i)
     {
-        state = AES_AddRoundKey(state, expandedKey[i]);
+        state = AES_AddRoundKey(state, localExpandedKey[i]);
         state = AES_InverseMixColumns(state);
         state = AES_InverseShiftRows(state);
         state = AES_InverseSubBytes(state);
     }
 
-    plainText[global_id] = AES_AddRoundKey(state, expandedKey[0]);
+    plainText[global_id] = AES_AddRoundKey(state, localExpandedKey[0]);
 }
 
 void AES_CTR_IncrementIC(uchar16* ic, unsigned int id)
@@ -372,29 +398,42 @@ void AES_CTR_IncrementIC(uchar16* ic, unsigned int id)
 }
 
 __kernel void AES_CTR_Encrypt(
-    __global __read_only uchar16* restrict plainText, __constant uchar16* restrict expandedKey, const uchar16 ic,
+    __global __read_only uchar16* restrict plainText,
+    __global __read_only uchar16* restrict expandedKey,
+    const uchar16 ic,
     __global __write_only uchar16* restrict cipherText,
     const unsigned int rounds,
     __local uchar16* restrict cache)
 {
-    const int global_id = get_global_id(0);
+    __local uchar16 localExpandedKey[15];
 
+    event_t cacheEvent;
+    cacheEvent = async_work_group_copy(
+        localExpandedKey,
+        expandedKey,
+        rounds,
+        cacheEvent
+    );
+
+    const int global_id = get_global_id(0);
     uchar16 state = ic;
     AES_CTR_IncrementIC(&state, global_id);
-    state = AES_AddRoundKey(state, expandedKey[0]);
+    wait_group_events(1, &cacheEvent);
+
+    state = AES_AddRoundKey(state, localExpandedKey[0]);
 
     for (int i = 1; i < rounds - 1; ++i)
     {
         state = AES_SubBytes(state);
         state = AES_ShiftRows(state);
         state = AES_MixColumns(state);
-        state = AES_AddRoundKey(state, expandedKey[i]);
+        state = AES_AddRoundKey(state, localExpandedKey[i]);
     }
 
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
 
-    cipherText[global_id] = plainText[global_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
+    cipherText[global_id] = plainText[global_id] ^ AES_AddRoundKey(state, localExpandedKey[rounds - 1]);
 }
 
 void AES_GCM_IncrementIV(uchar16* iv, unsigned int id)
@@ -411,28 +450,41 @@ void AES_GCM_IncrementIV(uchar16* iv, unsigned int id)
 }
 
 __kernel void AES_GCM_Encrypt(
-    __global __read_only uchar16* restrict plainText, __constant uchar16* restrict expandedKey, const uchar16 iv,
+    __global __read_only uchar16* restrict plainText,
+    __global __read_only uchar16* restrict expandedKey,
+    const uchar16 iv,
     __global __write_only uchar16* restrict cipherText,
     const unsigned int rounds,
     __local uchar16* restrict cache)
 {
-    const int global_id = get_global_id(0);
+    __local uchar16 localExpandedKey[15];
 
+    event_t cacheEvent;
+    cacheEvent = async_work_group_copy(
+        localExpandedKey,
+        expandedKey,
+        rounds,
+        cacheEvent
+    );
+
+    const int global_id = get_global_id(0);
     uchar16 state = iv;
     // the first IV is used for auth tag only, we use the second IV to get ciphertext
     AES_GCM_IncrementIV(&state, global_id + 1);
-    state = AES_AddRoundKey(state, expandedKey[0]);
+    wait_group_events(1, &cacheEvent);
+
+    state = AES_AddRoundKey(state, localExpandedKey[0]);
 
     for (int i = 1; i < rounds - 1; ++i)
     {
         state = AES_SubBytes(state);
         state = AES_ShiftRows(state);
         state = AES_MixColumns(state);
-        state = AES_AddRoundKey(state, expandedKey[i]);
+        state = AES_AddRoundKey(state, localExpandedKey[i]);
     }
 
     state = AES_SubBytes(state);
     state = AES_ShiftRows(state);
 
-    cipherText[global_id] = plainText[global_id] ^ AES_AddRoundKey(state, expandedKey[rounds - 1]);
+    cipherText[global_id] = plainText[global_id] ^ AES_AddRoundKey(state, localExpandedKey[rounds - 1]);
 }
