@@ -7,3 +7,7 @@ add_definitions(-DBOOST_ALL_NO_LIB)
 target_link_libraries(oclcrypto-cli
     oclcrypto
 )
+
+install(TARGETS "oclcrypto-cli"
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
