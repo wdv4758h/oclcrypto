@@ -9,3 +9,7 @@ target_link_libraries(oclcrypto-benchmarks
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_TIMER_LIBRARY}
 )
+
+install(TARGETS "oclcrypto-benchmarks"
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
