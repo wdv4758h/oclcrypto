@@ -35,18 +35,19 @@
 #include <oclcrypto/AES_CTR.h>
 #include <oclcrypto/AES_GCM.h>
 
-// TODO: Would be great to use boost::program_options or something similar
+// TODO: Would be great to use boost::program_options or something similar.
 //       I don't to avoid dependencies.
 
 int main(int argc, char** argv)
 {
     const std::string help =
-        "oclcrypto-cli ALGORITHM KEY INPUT_FILE OUTPUT_FILE\n"
+        "oclcrypto-cli ALGORITHM KEY INPUT_FILE OUTPUT_FILE [IC / IV]\n"
         "\n"
-        "ALGORITHM can be one of aes-ecb-enc, aes-ecb-dec."//, aes-ctr-enc, aes-gcm-enc."
+        "ALGORITHM can be one of aes-ecb-enc, aes-ecb-dec, aes-ctr-enc, aes-gcm-enc."
         "If OUTPUT_FILE is missing the result is printed to stdout."
         "\n"
         "Example: oclcrypto-cli aes-ecb-enc HELOHELOHELOHELO inputfile.txt outputfile.txt\n"
+        "Example: oclcrypto-cli aes-ctr-enc HELOHELOHELOHELO inputfile.txt outputfile.txt 1234567890abcdef\n"
         ;
 
     if (argc < 1 + 4)
@@ -74,6 +75,14 @@ int main(int argc, char** argv)
     std::vector<char> output_text;
     std::ofstream output_file(argv[4]);
 
+    std::string ic = "abcdefghijklmnop";
+    if (argc > 1 + 4)
+    {
+        ic = argv[4];
+        if (ic.size() < 16)
+            ic.insert(0, 16 - ic.size(), ' ');
+    }
+
     oclcrypto::System system;
     oclcrypto::Device& device = system.getBestDevice();
 
@@ -89,14 +98,14 @@ int main(int argc, char** argv)
         {
             alg = new oclcrypto::AES_ECB_Decrypt(system, device);
         }
-        /*else if (algorithm == "aes-ctr-enc")
+        else if (algorithm == "aes-ctr-enc")
         {
             alg = new oclcrypto::AES_CTR_Encrypt(system, device);
         }
         else if (algorithm == "aes-gcm-enc")
         {
             alg = new oclcrypto::AES_GCM_Encrypt(system, device);
-        }*/
+        }
         else
         {
             std::cout << "Invalid algorithm." << std::endl;
@@ -134,15 +143,34 @@ int main(int argc, char** argv)
                     output_text.push_back(data[i]);
             }
         }
-        /*
         else if (algorithm == "aes-ctr-enc")
         {
-            alg = new oclcrypto::AES_CTR_Encrypt(system, device);
+            oclcrypto::AES_CTR_Encrypt* algo = static_cast<oclcrypto::AES_CTR_Encrypt*>(alg);
+            algo->setPlainText(&input_text[0], input_text.size());
+            algo->setInitialCounter(reinterpret_cast<const unsigned char*>(ic.c_str()));
+            algo->execute(device.suggestLocalWorkSize());
+
+            const size_t size = algo->getCipherText()->getArraySize<char>();
+            {
+                auto data = algo->getCipherText()->lockRead<char>();
+                for (size_t i = 0; i < size; ++i)
+                    output_text.push_back(data[i]);
+            }
         }
         else if (algorithm == "aes-gcm-enc")
         {
-            alg = new oclcrypto::AES_GCM_Encrypt(system, device);
-        }*/
+            oclcrypto::AES_GCM_Encrypt* algo = static_cast<oclcrypto::AES_GCM_Encrypt*>(alg);
+            algo->setPlainText(&input_text[0], input_text.size());
+            algo->setInitialVector(reinterpret_cast<const unsigned char*>(ic.c_str()));
+            algo->execute(device.suggestLocalWorkSize());
+
+            const size_t size = algo->getCipherText()->getArraySize<char>();
+            {
+                auto data = algo->getCipherText()->lockRead<char>();
+                for (size_t i = 0; i < size; ++i)
+                    output_text.push_back(data[i]);
+            }
+        }
 
         for (size_t i = 0; i < output_text.size(); ++i)
             output_file << output_text[i];
