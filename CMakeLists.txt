@@ -67,10 +67,12 @@ add_library("oclcrypto" SHARED
 
 target_link_libraries("oclcrypto" ${LIBOCLCRYPTO_LINK_LIBRARIES})
 
-#install(TARGETS "oclcrypto"
-#    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-#install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/liboclcrypto"
-#    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(TARGETS "oclcrypto"
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/oclcrypto"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/oclcrypto"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 add_subdirectory(cli)
 
