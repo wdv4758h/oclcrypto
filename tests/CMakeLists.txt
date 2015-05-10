@@ -10,3 +10,7 @@ target_link_libraries(oclcrypto-tests
 )
 
 add_test(NAME oclcrypto-tests COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/oclcrypto-tests)
+
+install(TARGETS "oclcrypto-tests"
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
