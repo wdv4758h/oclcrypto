@@ -1,7 +1,7 @@
-file(GLOB LIBOCLCRYPTO_BENCHMARKS_HEADERS "${CMAKE_SOURCE_DIR}/benchmarks/*.h")
-file(GLOB LIBOCLCRYPTO_BENCHMARKS_SOURCES "${CMAKE_SOURCE_DIR}/benchmarks/*.cpp")
+file(GLOB OCLCRYPTO_BENCHMARKS_HEADERS "${CMAKE_SOURCE_DIR}/benchmarks/*.h")
+file(GLOB OCLCRYPTO_BENCHMARKS_SOURCES "${CMAKE_SOURCE_DIR}/benchmarks/*.cpp")
 
-add_executable(oclcrypto-benchmarks ${LIBOCLCRYPTO_BENCHMARKS_HEADERS} ${LIBOCLCRYPTO_BENCHMARKS_SOURCES})
+add_executable(oclcrypto-benchmarks ${OCLCRYPTO_BENCHMARKS_HEADERS} ${OCLCRYPTO_BENCHMARKS_SOURCES})
 add_definitions(-DBOOST_ALL_NO_LIB)
 
 target_link_libraries(oclcrypto-benchmarks
